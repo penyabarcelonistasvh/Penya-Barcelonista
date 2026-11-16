@@ -1,5 +1,6 @@
-const OWNER='cristiangarciajura', REPO='Penya-Barcelonista';
-const SITE='https://cristiangarciajura.github.io/Penya-Barcelonista/';
+const OWNER='penyabarcelonistasvh', REPO='Penya-Barcelonista';
+const ADMIN_LOGIN='cristiangarciajura';
+const SITE='https://penyabarcelonistasvh.github.io/Penya-Barcelonista/';
 const ALLOWED=new Set(['equips.json','club.json','noticies.json','patrocinadors.json','partits-cap-setmana.json']);
 const encoder=new TextEncoder();
 function cookies(req){return Object.fromEntries((req.headers.get('Cookie')||'').split(';').map(x=>x.trim()).filter(Boolean).map(x=>{const i=x.indexOf('=');return [x.slice(0,i),x.slice(i+1)]}))}
@@ -34,7 +35,7 @@ export default {async fetch(req,env){
   const userResponse=await github('/user',result.access_token);
   if(!userResponse.ok)return respond('No s’ha pogut verificar GitHub.',403);
   const user=await userResponse.json();
-  if(user.login?.toLowerCase()!==OWNER.toLowerCase())return respond('Només el compte propietari pot publicar.',403);
+  if(user.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return respond('Només el compte propietari pot publicar.',403);
   const value=await seal({token:result.access_token,login:user.login,exp:Date.now()+8*3600000},env);
   const headers=new Headers({'Location':origin+'/admin.html','Cache-Control':'no-store'});
   headers.append('Set-Cookie',cookie('pbsv_session',value,8*3600));
@@ -48,7 +49,7 @@ export default {async fetch(req,env){
   const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
   if(!s)return json({error:'Inicia sessió amb GitHub.'},401);
   const identityResponse=await github('/user',s.token);if(!identityResponse.ok)return json({error:'Sessió caducada.'},401);
-  const identity=await identityResponse.json();if(identity.login?.toLowerCase()!==OWNER.toLowerCase())return json({error:'Accés denegat.'},403);
+  const identity=await identityResponse.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return json({error:'Accés denegat.'},403);
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return json({error:'Connexió privada no configurada.'},503);
   try{const r=await env.PUSH_SERVICE.fetch('https://pbsv-push.internal/api/push/admin/subscribers',{headers:{Authorization:'Bearer '+env.PUSH_INTERNAL_TOKEN}});return respond(await r.text(),r.status,{'Content-Type':'application/json'})}
   catch{return json({error:'No es poden consultar els dispositius.'},502)}
@@ -57,7 +58,7 @@ export default {async fetch(req,env){
   const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
   if(!s)return json({error:'Inicia sessió amb GitHub.'},401);
   const identityResponse=await github('/user',s.token);if(!identityResponse.ok)return json({error:'Sessió caducada.'},401);
-  const identity=await identityResponse.json();if(identity.login?.toLowerCase()!==OWNER.toLowerCase())return json({error:'Accés denegat.'},403);
+  const identity=await identityResponse.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return json({error:'Accés denegat.'},403);
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return json({error:'Connexió privada no configurada.'},503);
   try{const r=await env.PUSH_SERVICE.fetch('https://pbsv-push.internal/api/push/admin/'+(path.endsWith('/audience')?'audience':'batches'),{headers:{Authorization:'Bearer '+env.PUSH_INTERNAL_TOKEN}});return respond(await r.text(),r.status,{'Content-Type':'application/json'})}
   catch{return json({error:'No es pot consultar la cua.'},502)}
@@ -69,7 +70,7 @@ export default {async fetch(req,env){
   if(method==='POST'&&(req.headers.get('Origin')!==origin||req.headers.get('X-PBSV-Action')!=='push-schedule'))return json({error:'Origen no permès'},403);
   if(!s)return json({error:'Inicia sessió amb GitHub.'},401);
   const identityResponse=await github('/user',s.token);if(!identityResponse.ok)return json({error:'Sessió GitHub caducada.'},401);
-  const identity=await identityResponse.json();if(identity.login?.toLowerCase()!==OWNER.toLowerCase())return json({error:'Accés denegat.'},403);
+  const identity=await identityResponse.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return json({error:'Accés denegat.'},403);
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return json({error:'Connexió privada no configurada.'},503);
   let payload;
   if(method==='POST'){try{const raw=await req.text();if(raw.length>4096)return json({error:'Dades massa grans'},413);payload=JSON.parse(raw)}catch{return json({error:'JSON incorrecte'},400)}}
@@ -87,7 +88,7 @@ export default {async fetch(req,env){
   const identityResponse=await github('/user',s.token);
   if(!identityResponse.ok)return json({error:'Sessió GitHub caducada.'},401);
   const identity=await identityResponse.json();
-  if(identity.login?.toLowerCase()!==OWNER.toLowerCase())return json({error:'Accés denegat.'},403);
+  if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return json({error:'Accés denegat.'},403);
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return json({error:'Connexió privada PUSH_SERVICE no configurada.'},503);
   let payload=null;
   if(sending){try{const raw=await req.text();if(raw.length>4096)return json({error:'Dades massa grans.'},413);payload=JSON.parse(raw)}catch{return json({error:'JSON incorrecte.'},400)}}
@@ -103,7 +104,7 @@ export default {async fetch(req,env){
   const identityResponse=await github('/user',s.token);
   if(!identityResponse.ok)return respond(JSON.stringify({error:'Sessió GitHub caducada.'}),401,{'Content-Type':'application/json'});
   const identity=await identityResponse.json();
-  if(identity.login?.toLowerCase()!==OWNER.toLowerCase())return respond(JSON.stringify({error:'Accés denegat.'}),403,{'Content-Type':'application/json'});
+  if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return respond(JSON.stringify({error:'Accés denegat.'}),403,{'Content-Type':'application/json'});
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return respond(JSON.stringify({error:!env.PUSH_SERVICE?'Falta el Service Binding PUSH_SERVICE al Worker pbsv-admin.':'Falta el secret PUSH_INTERNAL_TOKEN al Worker pbsv-admin.'}),503,{'Content-Type':'application/json'});
   let data;try{data=await req.json()}catch{return respond(JSON.stringify({error:'JSON incorrecte.'}),400,{'Content-Type':'application/json'})}
   const title=String(data?.title||'').trim(),body=String(data?.body||'').trim();
@@ -124,7 +125,7 @@ export default {async fetch(req,env){
   if(!ALLOWED.has(file)||typeof content!=='string'||content.length>1500000)return respond('Dades no permeses.',400);
   try{const parsed=JSON.parse(content);const collections={'equips.json':'teams','club.json':'sections','noticies.json':'noticias','patrocinadors.json':'sponsors'};if(file==='partits-cap-setmana.json' ? !(parsed.saturday&&typeof parsed.saturday==='object'&&parsed.sunday&&typeof parsed.sunday==='object') : !Array.isArray(parsed[collections[file]]))return respond('Format de dades incorrecte.',400)}catch{return respond('JSON incorrecte.',400)}
   const user=await github('/user',s.token);if(!user.ok)return respond('Sessió GitHub caducada.',401);
-  const identity=await user.json();if(identity.login?.toLowerCase()!==OWNER.toLowerCase())return respond('Accés denegat.',403);
+  const identity=await user.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return respond('Accés denegat.',403);
   const api='/repos/'+OWNER+'/'+REPO+'/contents/data/'+file;
   const current=await github(api,s.token);if(!current.ok)return respond('No es pot llegir el fitxer a GitHub.',502);
   const metadata=await current.json();
