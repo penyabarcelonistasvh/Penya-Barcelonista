@@ -43,7 +43,7 @@ function loadTurnstile(siteKey){
  });return turnstileReady;
 }
 async function securityToken(){
- if(!window.turnstile||turnstileWidget===null)throw Error('Verificació de seguretat no disponible.');
+ if(!window.turnstile||turnstileWidget===null)return null;
  const token=window.turnstile.getResponse(turnstileWidget);
  if(!token)throw Error('Completa primer la verificació de seguretat.');
  return token;
