@@ -96,6 +96,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  .hero h1{font-size:clamp(29px,8vw,39px);line-height:1.08}
  .hero p{line-height:1.55}.hero-actions{gap:9px}
  .hero-actions .btn{flex:1 1 145px;text-align:center;padding:12px}
+ #home .quick-grid{gap:12px}
+ #home .quick-grid>.quick{min-width:0;min-height:100px;padding:16px;border-radius:14px;overflow-wrap:anywhere}
+ #home .quick-grid>.quick h3{line-height:1.3;margin-top:0}
+ #home .quick-grid>.quick p{line-height:1.5}
+ #home img{max-width:100%;height:auto}
+ #home .pbsv-sponsor-logo img{max-width:100%;height:auto;object-fit:contain}
  .section-head h2{font-size:22px}.news-body{padding:16px}
  .news-body h3{line-height:1.35}
  .pbsv-alert-dialog{max-height:calc(100dvh - 24px);overflow:auto}
