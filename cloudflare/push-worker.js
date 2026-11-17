@@ -1,5 +1,4 @@
 import {sendWebPush} from './webpush.js';
-import {sendWebPush} from './webpush.js';
 // PBSV Web Push: subscripcions protegides per Turnstile i prova privada d'enviament a un dispositiu.
 const ORIGIN='https://penyabarcelonistasvh.github.io';
 const HOSTS=new Set(['fcm.googleapis.com','updates.push.services.mozilla.com','web.push.apple.com','api.push.apple.com']);
