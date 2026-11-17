@@ -111,13 +111,15 @@ export default {async scheduled(event,env,ctx){ctx.waitUntil(runDue(env))},async
   const title=String(data?.title||'').trim(),text=String(data?.body||'').trim();
   if(!title||title.length>90||!text||text.length>240)return response({error:'Títol o missatge incorrectes.'},400);
   // Una sola subscripció activa: evita enviar proves a tots els socis.
-  let row;try{row=await env.PUSH_DB.prepare('SELECT id,endpoint,p256dh,auth FROM push_subscriptions WHERE disabled_at IS NULL ORDER BY updated_at DESC LIMIT 1').first()}catch{return response({error:'No s’ha pogut consultar la base de dades.'},503)}
-  if(!row)return response({error:'No hi ha cap dispositiu subscrit per fer la prova.'},404);
+  const deviceId=typeof data?.deviceId==='string'?data.deviceId.trim().toLowerCase():'';
+  if(deviceId&&!/^[a-f0-9]{64}$/.test(deviceId))return response({error:'Codi de dispositiu incorrecte.'},400);
+  let row;try{row=deviceId?await env.PUSH_DB.prepare('SELECT id,endpoint,p256dh,auth FROM push_subscriptions WHERE disabled_at IS NULL AND id=?').bind(deviceId).first():await env.PUSH_DB.prepare('SELECT id,endpoint,p256dh,auth FROM push_subscriptions WHERE disabled_at IS NULL ORDER BY updated_at DESC LIMIT 1').first()}catch{return response({error:'No s’ha pogut consultar la base de dades.'},503)}
+  if(!row)return response({error:deviceId?'Aquest dispositiu no consta com a subscrit. Confirma les notificacions al mòbil.':'No hi ha cap dispositiu subscrit per fer la prova.'},404);
   try{
    const result=await sendWebPush(row,{title,body:text,url:'./avisos.html'},env);
    if(result.expired)await env.PUSH_DB.prepare('UPDATE push_subscriptions SET disabled_at=CURRENT_TIMESTAMP WHERE id=?').bind(row.id).run();
    if(!result.ok)return response({error:'El servei push ha rebutjat la prova (HTTP '+result.status+').',status:result.status},502);
-   return response({ok:true,message:'Prova enviada al dispositiu subscrit més recent. Comprova les notificacions del mòbil.',devices:1},200);
+   return response({ok:true,message:deviceId?'Prova enviada al dispositiu seleccionat.':'Prova enviada al dispositiu subscrit més recent. Comprova les notificacions del mòbil.',devices:1},200);
   }catch(e){return response({error:'No s’ha pogut enviar la prova: '+String(e?.message||'error inesperat').slice(0,140)},502)}
  }
  if(u.pathname==='/api/push/admin/subscribers'&&req.method==='GET'){
