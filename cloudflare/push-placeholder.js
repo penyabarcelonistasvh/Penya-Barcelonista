@@ -1,6 +1,6 @@
 import {sendWebPush} from './webpush.js';
 // PBSV Web Push: subscripcions protegides per Turnstile i prova privada d'enviament a un dispositiu.
-const ORIGIN='https://cristiangarciajura.github.io';
+const ORIGIN='https://penyabarcelonistasvh.github.io';
 const HOSTS=new Set(['fcm.googleapis.com','updates.push.services.mozilla.com','web.push.apple.com','api.push.apple.com']);
 const headers={'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'};
 function response(data,status=200,cors=false){return new Response(JSON.stringify(data),{status,headers:{...headers,...(cors?{'access-control-allow-origin':ORIGIN,'vary':'Origin','access-control-allow-methods':'GET,POST,DELETE,OPTIONS','access-control-allow-headers':'Content-Type'}:{})}})}
@@ -16,7 +16,7 @@ async function verifyTurnstile(token,env,req){
  const ip=req.headers.get('CF-Connecting-IP');if(ip)form.set('remoteip',ip);
  const r=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',body:form,signal:AbortSignal.timeout(5000)});
  if(!r.ok)return false;const v=await r.json();
- return v.success===true&&v.hostname==='cristiangarciajura.github.io';
+ return v.success===true&&v.hostname==='penyabarcelonistasvh.github.io';
 }
 
 const TARGETS=new Set(['./index.html','./index.html#noticies','./index.html#partits','./index.html#club','./avisos.html']);
