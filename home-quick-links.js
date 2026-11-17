@@ -14,7 +14,7 @@ async function updateSponsorImages(){
    const card=document.createElement('article');card.className='pbsv-sponsor-card';
    const logo=document.createElement('div');logo.className='pbsv-sponsor-logo';
    const valid=typeof s.image==='string'&&(/^(?:assets\/|\.\/|https:\/\/)/.test(s.image)||/^data:image\/(?:png|jpeg|webp|gif);base64,/i.test(s.image));
-   if(valid){const img=document.createElement('img');img.src=s.image;img.alt=s.name;img.loading='lazy';img.onerror=()=>logo.replaceChildren(document.createTextNode(s.name));logo.append(img)}
+   if(valid){const img=document.createElement('img');img.src=s.image;img.alt=s.name;img.loading='lazy';img.decoding='async';img.fetchPriority='low';img.onerror=()=>logo.replaceChildren(document.createTextNode(s.name));logo.append(img)}
    else logo.textContent=s.name;
    const body=document.createElement('div');body.className='pbsv-sponsor-content';
    const name=document.createElement('h3');name.textContent=s.name;
