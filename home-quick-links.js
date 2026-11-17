@@ -87,7 +87,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  .hero-actions .btn{min-height:44px}
  }
  @media(max-width:520px){
- .navwrap{gap:7px;padding:9px 12px}
+ .navwrap{gap:5px;padding:8px 9px;flex-wrap:nowrap;align-items:center}
+ .navwrap .brand{flex:1 1 0;min-width:0;max-width:none}
+ .navwrap .brandname{min-width:0;overflow:hidden;font-size:clamp(9px,2.5vw,11px);line-height:1.25}
+ .navwrap .brandname small{font-size:9px}
+ .navwrap .brand img{width:35px;height:35px}
+ .navwrap .menu-toggle,.navwrap .lang-switch,.navwrap .pbsv-bell{flex:0 0 auto;min-width:40px;min-height:44px;padding:8px}
+ .navwrap .pbsv-compact-instagram{flex:0 0 auto;min-width:40px;min-height:44px;padding:8px;font-size:0!important;white-space:nowrap}
+ .navwrap .pbsv-compact-instagram::after{content:'IG';font-size:13px;font-weight:700}
+ .navwrap .menu-toggle{font-size:0!important;white-space:nowrap}
+ .navwrap .menu-toggle::after{content:'Menú';font-size:12px;font-weight:600}
+
  .brand{gap:8px}.brandname{font-size:11px;letter-spacing:0}
  .brandname small{font-size:9px;letter-spacing:.06em}
  .brand img{width:39px;height:39px;flex-shrink:0}
@@ -110,3 +120,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}`;
  document.head.append(style);
 })();
+
+/* Capçalera compacta: mantenir l'accés a Instagram en pantalles estretes. */
+(()=>{'use strict';function init(){const nav=document.querySelector('.navwrap');if(!nav)return;for(const el of nav.querySelectorAll('a,button')){if(/instagram/i.test((el.textContent||'').trim())&&!el.classList.contains('pbsv-compact-instagram')){el.classList.add('pbsv-compact-instagram');if(!el.getAttribute('aria-label'))el.setAttribute('aria-label','Instagram de la Penya');break}}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init()})();
