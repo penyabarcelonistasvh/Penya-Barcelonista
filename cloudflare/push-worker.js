@@ -1,23 +1,215 @@
-// PBSV Web Push: preparació de subscripcions (NO envia notificacions encara).
-// Desplegar com a Worker separat, amb binding D1 "PUSH_DB" i secret PUSH_VAPID_PUBLIC_KEY.
-// El panell de publicació GitHub existent no es modifica.
-const HEADERS={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
-const json=(obj,status=200,extra={})=>new Response(JSON.stringify(obj),{status,headers:{...HEADERS,'Content-Type':'application/json; charset=utf-8',...extra}});
-const allowedOrigin='https://penyabarcelonistasvh.github.io';
-const appPrefix='/Penya-Barcelonista/';
-function cors(req){const origin=req.headers.get('Origin');return origin===allowedOrigin?{'Access-Control-Allow-Origin':origin,'Vary':'Origin','Access-Control-Allow-Methods':'GET, POST, DELETE, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}:{}}
+import {sendWebPush} from './webpush.js';
+// PBSV Web Push: subscripcions protegides per Turnstile i prova privada d'enviament a un dispositiu.
+const ORIGIN='https://penyabarcelonistasvh.github.io';
+const HOSTS=new Set(['fcm.googleapis.com','updates.push.services.mozilla.com','web.push.apple.com','api.push.apple.com']);
+const headers={'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer'};
+function response(data,status=200,cors=false){return new Response(JSON.stringify(data),{status,headers:{...headers,...(cors?{'access-control-allow-origin':ORIGIN,'vary':'Origin','access-control-allow-methods':'GET,POST,DELETE,OPTIONS','access-control-allow-headers':'Content-Type'}:{})}})}
+const enabled=env=>!!(env.PUSH_DB&&env.PUSH_VAPID_PUBLIC_KEY);
+function b64bytes(s){if(typeof s!=='string'||!/^[a-zA-Z0-9_-]+$/.test(s))return null;try{const t=atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4));return Uint8Array.from(t,c=>c.charCodeAt(0))}catch{return null}}
+function endpointValid(raw){try{const u=new URL(raw);return u.protocol==='https:'&&!u.username&&!u.password&&u.port===''&&u.hash===''&&u.href.length<2048&&HOSTS.has(u.hostname)}catch{return false}}
+function subscriptionValid(s){return s&&endpointValid(s.endpoint)&&b64bytes(s.keys?.p256dh)?.length===65&&b64bytes(s.keys?.auth)?.length===16}
+async function sha(s){const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function body(req){const size=Number(req.headers.get('content-length'));if(size>4096)throw Error('too_large');const txt=await req.text();if(txt.length>4096)throw Error('too_large');return JSON.parse(txt)}
+async function verifyTurnstile(token,env,req){
+ if(typeof token!=='string'||token.length<10||token.length>2048)return false;
+ const form=new FormData();form.set('secret',env.PUSH_TURNSTILE_SECRET);form.set('response',token);
+ const ip=req.headers.get('CF-Connecting-IP');if(ip)form.set('remoteip',ip);
+ const r=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',body:form,signal:AbortSignal.timeout(5000)});
+ if(!r.ok)return false;const v=await r.json();
+ return v.success===true&&v.hostname==='penyabarcelonistasvh.github.io';
+}
+
+const TARGETS=new Set(['./index.html','./index.html#noticies','./index.html#partits','./index.html#club','./avisos.html']);
+function validNotice(d){return d&&typeof d.title==='string'&&d.title.trim().length>0&&d.title.trim().length<=90&&typeof d.message==='string'&&d.message.trim().length>0&&d.message.trim().length<=240&&['match','news','event','urgent'].includes(d.category)&&TARGETS.has(d.target)}
+async function ensureSchedule(env){
+ await env.PUSH_DB.prepare("CREATE TABLE IF NOT EXISTS push_schedule (id TEXT PRIMARY KEY, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, due_at TEXT NOT NULL, category TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, target TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', total INTEGER, accepted INTEGER, failed INTEGER, finished_at TEXT)").run();
+}
+async function dispatchNotice(env,d,id){
+ const q=await env.PUSH_DB.prepare('SELECT id,endpoint,p256dh,auth FROM push_subscriptions WHERE disabled_at IS NULL ORDER BY updated_at DESC LIMIT 21').all();
+ const rows=q.results||[];
+ if(rows.length>20)throw Error('Més de 20 dispositius: enviament aturat fins a habilitar lots');
+ let accepted=0,failed=0;
+ for(const row of rows){
+  try{const r=await sendWebPush(row,{title:d.title,body:d.message,url:d.target,tag:'pbsv-'+id},env);if(r.ok)accepted++;else{failed++;if(r.expired)await env.PUSH_DB.prepare('UPDATE push_subscriptions SET disabled_at=CURRENT_TIMESTAMP WHERE id=?').bind(row.id).run()}}catch{failed++}
+ }
+ await env.PUSH_DB.prepare('INSERT INTO push_delivery_history (id,category,title,message,target,total,accepted,failed) VALUES (?,?,?,?,?,?,?,?)').bind(id,d.category,d.title,d.message,d.target,rows.length,accepted,failed).run();
+ return {total:rows.length,accepted,failed};
+}
+async function ensureBatches(env){
+ await env.PUSH_DB.prepare("CREATE TABLE IF NOT EXISTS push_batches (id TEXT PRIMARY KEY, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, category TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, target TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', cursor TEXT NOT NULL DEFAULT '', total INTEGER NOT NULL, processed INTEGER NOT NULL DEFAULT 0, accepted INTEGER NOT NULL DEFAULT 0, failed INTEGER NOT NULL DEFAULT 0, finished_at TEXT)").run();
+ await env.PUSH_DB.prepare("CREATE TABLE IF NOT EXISTS push_batch_attempts (batch_id TEXT NOT NULL, subscription_id TEXT NOT NULL, PRIMARY KEY(batch_id,subscription_id))").run();
+}
+async function enqueueBatch(env,d,id){
+ await ensureBatches(env);
+ const q=await env.PUSH_DB.prepare('SELECT COUNT(*) AS n FROM push_subscriptions WHERE disabled_at IS NULL').first();
+ const total=Number(q?.n||0);
+ if(!total)throw Error('No hi ha dispositius subscrits');
+ await env.PUSH_DB.prepare('INSERT INTO push_batches (id,category,title,message,target,total) VALUES (?,?,?,?,?,?)').bind(id,d.category,d.title,d.message,d.target,total).run();
+ return total;
+}
+async function processBatches(env){
+ await ensureBatches(env);
+ const jobs=await env.PUSH_DB.prepare("SELECT * FROM push_batches WHERE status IN ('pending','processing') ORDER BY created_at LIMIT 3").all();
+ for(const job of jobs.results||[]){
+  await env.PUSH_DB.prepare("UPDATE push_batches SET status='processing' WHERE id=? AND status='pending'").bind(job.id).run();
+  const q=await env.PUSH_DB.prepare("SELECT id,endpoint,p256dh,auth FROM push_subscriptions WHERE disabled_at IS NULL AND id>? ORDER BY id LIMIT 10").bind(job.cursor).all();
+  const rows=q.results||[];let accepted=0,failed=0,processed=0,cursor=job.cursor;
+  for(const row of rows){
+   cursor=row.id;
+   // Reserva cada destinatari abans d'enviar: no repetir-lo si el cron es reinicia.
+   const claim=await env.PUSH_DB.prepare('INSERT OR IGNORE INTO push_batch_attempts (batch_id,subscription_id) VALUES (?,?)').bind(job.id,row.id).run();
+   if(!claim.meta?.changes)continue;
+   processed++;
+   try{const r=await sendWebPush(row,{title:job.title,body:job.message,url:job.target,tag:'pbsv-'+job.id},env);if(r.ok)accepted++;else{failed++;if(r.expired)await env.PUSH_DB.prepare('UPDATE push_subscriptions SET disabled_at=CURRENT_TIMESTAMP WHERE id=?').bind(row.id).run()}}catch{failed++}
+  }
+  await env.PUSH_DB.prepare('UPDATE push_batches SET cursor=?,processed=processed+?,accepted=accepted+?,failed=failed+? WHERE id=?').bind(cursor,processed,accepted,failed,job.id).run();
+  if(rows.length<10){
+   const current=await env.PUSH_DB.prepare('SELECT * FROM push_batches WHERE id=?').bind(job.id).first();
+   await env.PUSH_DB.prepare("UPDATE push_batches SET status=?,finished_at=CURRENT_TIMESTAMP WHERE id=?").bind(current.failed?'partial':'sent',job.id).run();
+   await env.PUSH_DB.prepare('INSERT OR IGNORE INTO push_delivery_history (id,category,title,message,target,total,accepted,failed) VALUES (?,?,?,?,?,?,?,?)').bind(job.id,job.category,job.title,job.message,job.target,current.processed,current.accepted,current.failed).run();
+   await env.PUSH_DB.prepare("UPDATE push_schedule SET status=?,total=?,accepted=?,failed=?,finished_at=CURRENT_TIMESTAMP WHERE id=? AND status='processing'").bind(current.failed?'partial':'sent',current.processed,current.accepted,current.failed,job.id).run();
+  }
+ }
+}
+async function runDue(env){
+ if(!env.PUSH_DB||!env.PUSH_VAPID_PRIVATE_KEY||!env.PUSH_VAPID_PUBLIC_KEY)return;
+ await ensureSchedule(env);
+ await env.PUSH_DB.prepare("CREATE TABLE IF NOT EXISTS push_cron_health (id INTEGER PRIMARY KEY CHECK(id=1), last_run TEXT NOT NULL)").run();
+ await env.PUSH_DB.prepare("INSERT INTO push_cron_health (id,last_run) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET last_run=excluded.last_run").bind(new Date().toISOString()).run();
+ await env.PUSH_DB.prepare("CREATE TABLE IF NOT EXISTS push_delivery_history (id TEXT PRIMARY KEY, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, category TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, target TEXT NOT NULL, total INTEGER NOT NULL, accepted INTEGER NOT NULL, failed INTEGER NOT NULL)").run();
+ const due=await env.PUSH_DB.prepare("SELECT * FROM push_schedule WHERE status='pending' AND due_at<=? ORDER BY due_at LIMIT 10").bind(new Date().toISOString()).all();
+ for(const job of due.results||[]){
+  const claim=await env.PUSH_DB.prepare("UPDATE push_schedule SET status='processing' WHERE id=? AND status='pending'").bind(job.id).run();
+  if(!claim.meta?.changes)continue;
+  try{
+   const count=await env.PUSH_DB.prepare('SELECT COUNT(*) AS n FROM push_subscriptions WHERE disabled_at IS NULL').first();
+   if(Number(count?.n||0)>20){await enqueueBatch(env,job,job.id);continue}
+   const r=await dispatchNotice(env,job,job.id);
+   await env.PUSH_DB.prepare("UPDATE push_schedule SET status=?,total=?,accepted=?,failed=?,finished_at=CURRENT_TIMESTAMP WHERE id=?").bind(r.failed?'partial':'sent',r.total,r.accepted,r.failed,job.id).run();
+  }catch{
+   await env.PUSH_DB.prepare("UPDATE push_schedule SET status='failed',finished_at=CURRENT_TIMESTAMP WHERE id=?").bind(job.id).run();
+  }
+ }
+ await processBatches(env);
+}
+
 function validEndpoint(url){try{const u=new URL(url);return u.protocol==='https:'&&u.username===''&&u.password===''&&u.hostname.length>3&&u.href.length<2048}catch{return false}}
 function validKey(value){return typeof value==='string'&&value.length>=16&&value.length<=256&&/^[a-zA-Z0-9_-]+$/.test(value)}
 async function hash(endpoint){const bytes=new TextEncoder().encode(endpoint);const digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-export default {async fetch(req,env){
- const url=new URL(req.url),origin=req.headers.get('Origin'),headers=cors(req);
- if(req.method==='OPTIONS')return origin===allowedOrigin?new Response(null,{status:204,headers:{...HEADERS,...headers}}):json({error:'Origin no permès'},403);
+
+export default {async scheduled(event,env,ctx){ctx.waitUntil(runDue(env))},async fetch(req,env){
+ const u=new URL(req.url),origin=req.headers.get('Origin'),cors=origin===ORIGIN;
+ if(u.pathname==='/api/push/status'&&req.method==='GET'){
+  let database=false;try{if(env.PUSH_DB){await env.PUSH_DB.prepare('SELECT 1 FROM push_subscriptions LIMIT 1').first();database=true}}catch{}
+  return response({service:'pbsv-push',database,publicKeyConfigured:!!env.PUSH_VAPID_PUBLIC_KEY,privateKeyConfigured:!!env.PUSH_VAPID_PRIVATE_KEY,subscriptionsEnabled:enabled(env),sendingEnabled:!!(env.PUSH_VAPID_PRIVATE_KEY&&env.PUSH_INTERNAL_TOKEN&&env.PUSH_DB)});
+ }
+ if(u.pathname==='/api/push/admin/test'&&req.method==='POST'){
+  const auth=req.headers.get('Authorization')||'';
+  if(!env.PUSH_INTERNAL_TOKEN||auth!=='Bearer '+env.PUSH_INTERNAL_TOKEN)return response({error:'Accés denegat'},403);
+  if(!env.PUSH_DB||!env.PUSH_VAPID_PUBLIC_KEY||!env.PUSH_VAPID_PRIVATE_KEY)return response({error:'Falten configuracions de Web Push al servidor.'},503);
+  let data;try{data=await body(req)}catch{return response({error:'Dades de prova incorrectes.'},400)}
+  const title=String(data?.title||'').trim(),text=String(data?.body||'').trim();
+  if(!title||title.length>90||!text||text.length>240)return response({error:'Títol o missatge incorrectes.'},400);
+  // Una sola subscripció activa: evita enviar proves a tots els socis.
+  let row;try{row=await env.PUSH_DB.prepare('SELECT id,endpoint,p256dh,auth FROM push_subscriptions WHERE disabled_at IS NULL ORDER BY updated_at DESC LIMIT 1').first()}catch{return response({error:'No s’ha pogut consultar la base de dades.'},503)}
+  if(!row)return response({error:'No hi ha cap dispositiu subscrit per fer la prova.'},404);
+  try{
+   const result=await sendWebPush(row,{title,body:text,url:'./avisos.html'},env);
+   if(result.expired)await env.PUSH_DB.prepare('UPDATE push_subscriptions SET disabled_at=CURRENT_TIMESTAMP WHERE id=?').bind(row.id).run();
+   if(!result.ok)return response({error:'El servei push ha rebutjat la prova (HTTP '+result.status+').',status:result.status},502);
+   return response({ok:true,message:'Prova enviada al dispositiu subscrit més recent. Comprova les notificacions del mòbil.',devices:1},200);
+  }catch(e){return response({error:'No s’ha pogut enviar la prova: '+String(e?.message||'error inesperat').slice(0,140)},502)}
+ }
+ if(u.pathname==='/api/push/admin/subscribers'&&req.method==='GET'){
+  if(!env.PUSH_INTERNAL_TOKEN||req.headers.get('Authorization')!=='Bearer '+env.PUSH_INTERNAL_TOKEN)return response({error:'Accés denegat'},403);
+  if(!env.PUSH_DB)return response({error:'Base de dades no disponible'},503);
+  try{
+   const q=await env.PUSH_DB.prepare("SELECT COUNT(*) AS total, SUM(CASE WHEN disabled_at IS NULL THEN 1 ELSE 0 END) AS active, SUM(CASE WHEN disabled_at IS NOT NULL THEN 1 ELSE 0 END) AS inactive FROM push_subscriptions").first();
+   return response({total:Number(q?.total||0),active:Number(q?.active||0),inactive:Number(q?.inactive||0),updatedAt:new Date().toISOString()});
+  }catch{return response({error:'No es poden consultar les subscripcions'},503)}
+ }
+ if(u.pathname==='/api/push/admin/audience'&&req.method==='GET'){
+  if(!env.PUSH_INTERNAL_TOKEN||req.headers.get('Authorization')!=='Bearer '+env.PUSH_INTERNAL_TOKEN)return response({error:'Accés denegat'},403);
+  if(!env.PUSH_DB)return response({error:'Base de dades no disponible'},503);
+  try{
+   const r=await env.PUSH_DB.prepare("SELECT COUNT(*) AS total, SUM(CASE WHEN disabled_at IS NULL THEN 1 ELSE 0 END) AS active, SUM(CASE WHEN disabled_at IS NOT NULL THEN 1 ELSE 0 END) AS inactive FROM push_subscriptions").first();
+   return response({total:Number(r?.total||0),active:Number(r?.active||0),inactive:Number(r?.inactive||0),updatedAt:new Date().toISOString()});
+  }catch{return response({error:'No es pot consultar el nombre de dispositius'},503)}
+ }
+ if(u.pathname==='/api/push/admin/batches'&&req.method==='GET'){
+  if(!env.PUSH_INTERNAL_TOKEN||req.headers.get('Authorization')!=='Bearer '+env.PUSH_INTERNAL_TOKEN)return response({error:'Accés denegat'},403);
+  if(!env.PUSH_DB)return response({error:'Base de dades no disponible'},503);
+  await ensureBatches(env);
+  const q=await env.PUSH_DB.prepare('SELECT id,created_at,title,status,total,processed,accepted,failed FROM push_batches ORDER BY created_at DESC LIMIT 30').all();
+  return response({items:q.results||[]});
+ }
+ if((u.pathname==='/api/push/admin/send'||u.pathname==='/api/push/admin/history')&&['GET','POST'].includes(req.method)){
+  if(!env.PUSH_INTERNAL_TOKEN||req.headers.get('Authorization')!=='Bearer '+env.PUSH_INTERNAL_TOKEN)return response({error:'Accés denegat'},403);
+  if(!env.PUSH_DB)return response({error:'Base de dades no disponible'},503);
+  try{await env.PUSH_DB.prepare("CREATE TABLE IF NOT EXISTS push_delivery_history (id TEXT PRIMARY KEY, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, category TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, target TEXT NOT NULL, total INTEGER NOT NULL, accepted INTEGER NOT NULL, failed INTEGER NOT NULL)").run()}catch{return response({error:'No es pot preparar l’historial de notificacions.'},503)}
+  if(u.pathname==='/api/push/admin/history'&&req.method==='GET'){
+   try{const rows=await env.PUSH_DB.prepare('SELECT id,created_at,category,title,message,target,total,accepted,failed FROM push_delivery_history ORDER BY created_at DESC LIMIT 30').all();return response({items:rows.results||[]})}catch{return response({error:'No es pot consultar l’historial.'},503)}
+  }
+  if(u.pathname!=='/api/push/admin/send'||req.method!=='POST')return response({error:'Mètode no permès'},405);
+  if(!env.PUSH_VAPID_PUBLIC_KEY||!env.PUSH_VAPID_PRIVATE_KEY)return response({error:'Claus VAPID no configurades'},503);
+  let data;try{data=await body(req)}catch{return response({error:'Dades incorrectes'},400)}
+  const title=String(data?.title||'').trim(),message=String(data?.message||'').trim();
+  const category=String(data?.category||''),target=String(data?.target||'');
+  const targets=new Set(['./index.html','./index.html#noticies','./index.html#partits','./index.html#club','./avisos.html']);
+  if(!title||title.length>90||!message||message.length>240||!['match','news','event','urgent'].includes(category)||!targets.has(target))return response({error:'Dades de l’avís incorrectes'},400);
+  let rows;
+  try{const q=await env.PUSH_DB.prepare('SELECT id,endpoint,p256dh,auth FROM push_subscriptions WHERE disabled_at IS NULL ORDER BY updated_at DESC LIMIT 21').all();rows=q.results||[]}catch{return response({error:'No es poden consultar els dispositius'},503)}
+  if(!rows.length)return response({error:'No hi ha dispositius subscrits'},404);
+  if(rows.length>20){
+   try{const id=crypto.randomUUID(),total=await enqueueBatch(env,{title,message,category,target},id);return response({ok:true,queued:true,id,total,message:'Enviament afegit a la cua per a '+total+' dispositius. Es processarà en lots de 10.'},202)}
+   catch(e){return response({error:'No s’ha pogut crear la cua: '+String(e?.message||'error')},503)}
+  }
+  const id=crypto.randomUUID();let accepted=0,failed=0;
+  for(const row of rows){
+   try{const result=await sendWebPush(row,{title,body:message,url:target,tag:'pbsv-'+id},env);if(result.ok)accepted++;else{failed++;if(result.expired)await env.PUSH_DB.prepare('UPDATE push_subscriptions SET disabled_at=CURRENT_TIMESTAMP WHERE id=?').bind(row.id).run()}}catch{failed++}
+  }
+  try{await env.PUSH_DB.prepare('INSERT INTO push_delivery_history (id,category,title,message,target,total,accepted,failed) VALUES (?,?,?,?,?,?,?,?)').bind(id,category,title,message,target,rows.length,accepted,failed).run()}catch{return response({error:'Enviament processat, però no s’ha pogut desar l’historial.',accepted,failed},500)}
+  return response({ok:failed===0,id,total:rows.length,accepted,failed,message:'Acceptats pel servei push: '+accepted+' de '+rows.length+'. Això no confirma la visualització al mòbil.'},200);
+ }
+ if(u.pathname.startsWith('/api/push/admin/schedule')){
+  if(!env.PUSH_INTERNAL_TOKEN||req.headers.get('Authorization')!=='Bearer '+env.PUSH_INTERNAL_TOKEN)return response({error:'Accés denegat'},403);
+  if(!env.PUSH_DB)return response({error:'Base de dades no disponible'},503);
+  try{await ensureSchedule(env)}catch{return response({error:'No es pot preparar la programació'},503)}
+  if(u.pathname==='/api/push/admin/schedule/health'&&req.method==='GET'){
+   let lastRun=null;try{const r=await env.PUSH_DB.prepare('SELECT last_run FROM push_cron_health WHERE id=1').first();lastRun=r?.last_run||null}catch{}
+   const q=await env.PUSH_DB.prepare("SELECT COUNT(*) AS count FROM push_schedule WHERE status='pending' AND due_at<=?").bind(new Date().toISOString()).first();
+   return response({lastRun,overdue:q?.count||0,serverTime:new Date().toISOString()});
+  }
+  if(u.pathname==='/api/push/admin/schedule'&&req.method==='GET'){
+   const q=await env.PUSH_DB.prepare('SELECT id,created_at,due_at,category,title,message,target,status,total,accepted,failed FROM push_schedule ORDER BY created_at DESC LIMIT 40').all();
+   return response({items:q.results||[]});
+  }
+  if(u.pathname==='/api/push/admin/schedule'&&req.method==='POST'){
+   let d;try{d=await body(req)}catch{return response({error:'Dades incorrectes'},400)}
+   if(!validNotice(d))return response({error:'Avís incorrecte'},400);
+   const due=new Date(d.dueAt);
+   if(typeof d.dueAt!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{3})?Z$/.test(d.dueAt)||!Number.isFinite(due.getTime())||due.getTime()<Date.now()+120000||due.getTime()>Date.now()+365*86400000)return response({error:'Escull una data entre 2 minuts i 1 any en el futur'},400);
+   const id=crypto.randomUUID();
+   await env.PUSH_DB.prepare('INSERT INTO push_schedule (id,due_at,category,title,message,target) VALUES (?,?,?,?,?,?)').bind(id,due.toISOString(),d.category,d.title.trim(),d.message.trim(),d.target).run();
+   return response({ok:true,id,dueAt:due.toISOString(),message:'Avís programat. El sistema comprova els enviaments cada minut.'},201);
+  }
+  if(u.pathname==='/api/push/admin/schedule/cancel'&&req.method==='POST'){
+   let d;try{d=await body(req)}catch{return response({error:'Dades incorrectes'},400)}
+   if(typeof d?.id!=='string'||!/^[a-f0-9-]{36}$/.test(d.id))return response({error:'Identificador incorrecte'},400);
+   const r=await env.PUSH_DB.prepare("UPDATE push_schedule SET status='cancelled' WHERE id=? AND status='pending'").bind(d.id).run();
+   return response({ok:!!r.meta?.changes,message:r.meta?.changes?'Programació cancel·lada':'Ja no es pot cancel·lar aquest avís'},r.meta?.changes?200:409);
+  }
+  return response({error:'Mètode no permès'},405);
+ }
+ const json=(data,status=200,extra={})=>new Response(JSON.stringify(data),{status,headers:{...headers,'Content-Type':'application/json; charset=utf-8',...extra}});
+ const allowedOrigin=ORIGIN;const corsHeaders=origin===ORIGIN?{'Access-Control-Allow-Origin':ORIGIN,'Vary':'Origin','Access-Control-Allow-Methods':'GET, POST, DELETE, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}:{};
+ if(req.method==='OPTIONS')return origin===allowedOrigin?new Response(null,{status:204,headers:{...HEADERS,...corsHeaders}}):json({error:'Origin no permès'},403);
  if(origin!==allowedOrigin)return json({error:'Origin no permès'},403);
  if(!env.PUSH_DB)return json({error:'Servei encara no configurat'},503,headers);
- if(url.pathname==='/api/push/public-key'&&req.method==='GET'){
+ if(u.pathname==='/api/push/public-key'&&req.method==='GET'){
   return env.PUSH_VAPID_PUBLIC_KEY?json({publicKey:env.PUSH_VAPID_PUBLIC_KEY},200,headers):json({error:'VAPID pendent de configurar'},503,headers);
  }
- if(url.pathname==='/api/push/subscriptions'&&req.method==='POST'){
+ if(u.pathname==='/api/push/subscriptions'&&req.method==='POST'){
   if((Number(req.headers.get('Content-Length'))||0)>4096)return json({error:'Massa dades'},413,headers);
   let data;try{data=await req.json()}catch{return json({error:'JSON incorrecte'},400,headers)}
   if(!validEndpoint(data?.endpoint)||!validKey(data?.keys?.p256dh)||!validKey(data?.keys?.auth))return json({error:'Subscripció no vàlida'},400,headers);
@@ -25,7 +217,7 @@ export default {async fetch(req,env){
   await env.PUSH_DB.prepare('INSERT INTO push_subscriptions (id,endpoint,p256dh,auth) VALUES (?,?,?,?) ON CONFLICT(endpoint) DO UPDATE SET p256dh=excluded.p256dh,auth=excluded.auth,updated_at=CURRENT_TIMESTAMP,disabled_at=NULL').bind(id,data.endpoint,data.keys.p256dh,data.keys.auth).run();
   return json({ok:true},201,headers);
  }
- if(url.pathname==='/api/push/subscriptions'&&req.method==='DELETE'){
+ if(u.pathname==='/api/push/subscriptions'&&req.method==='DELETE'){
   let data;try{data=await req.json()}catch{return json({error:'JSON incorrecte'},400,headers)}
   if(!validEndpoint(data?.endpoint))return json({error:'Subscripció no vàlida'},400,headers);
   await env.PUSH_DB.prepare('UPDATE push_subscriptions SET disabled_at=CURRENT_TIMESTAMP WHERE id=?').bind(await hash(data.endpoint)).run();
