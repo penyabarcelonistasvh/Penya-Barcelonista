@@ -87,16 +87,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  .hero-actions .btn{min-height:44px}
  }
  @media(max-width:520px){
- .navwrap{gap:5px;padding:8px 9px;flex-wrap:nowrap;align-items:center}
- .navwrap .brand{flex:1 1 0;min-width:0;max-width:none}
- .navwrap .brandname{min-width:0;overflow:hidden;font-size:clamp(9px,2.5vw,11px);line-height:1.25}
+ .navwrap{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:10px;padding:12px 14px}
+ .navwrap .brand{order:0;flex:1 1 0;min-width:0;max-width:none}
+ .navwrap .brandname{min-width:0;font-size:11px;line-height:1.25;letter-spacing:0}
  .navwrap .brandname small{font-size:9px}
- .navwrap .brand img{width:35px;height:35px}
- .navwrap .menu-toggle,.navwrap .lang-switch,.navwrap .pbsv-bell{flex:0 0 auto;min-width:40px;min-height:44px;padding:8px}
- .navwrap .pbsv-compact-instagram{flex:0 0 auto;min-width:40px;min-height:44px;padding:8px;font-size:0!important;white-space:nowrap}
- .navwrap .pbsv-compact-instagram::after{content:'IG';font-size:13px;font-weight:700}
- .navwrap .menu-toggle{font-size:0!important;white-space:nowrap}
- .navwrap .menu-toggle::after{content:'Menú';font-size:12px;font-weight:600}
+ .navwrap .brand img{width:39px;height:39px;flex-shrink:0}
+ .navwrap #pbsvBell,.navwrap .pbsv-bell{order:1;flex:0 0 auto;min-width:44px;min-height:44px}
+ .navwrap::after{content:'';order:2;flex-basis:100%;height:0}
+ .navwrap .menu-toggle{order:3;flex:0 0 auto;min-height:44px;min-width:90px;padding:8px 12px;font-size:inherit!important;white-space:nowrap}
+ .navwrap .menu-toggle::after{content:none!important}
+ .navwrap .lang-switch{order:4;flex:0 0 auto;min-height:44px;min-width:44px}
+ .navwrap .pbsv-compact-instagram{order:5;flex:0 0 auto;min-height:44px;padding:8px 10px;font-size:inherit!important;white-space:nowrap}
+ .navwrap .pbsv-compact-instagram::after{content:none!important}
 
  .brand{gap:8px}.brandname{font-size:11px;letter-spacing:0}
  .brandname small{font-size:9px;letter-spacing:.06em}
