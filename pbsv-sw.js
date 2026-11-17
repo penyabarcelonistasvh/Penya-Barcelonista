@@ -19,7 +19,7 @@ self.addEventListener('push',event=>{
   const url=destination(data.url||data?.data?.url);
   await self.registration.showNotification(title,{
    body,icon:new URL('./pbsv-icon-padded.png',self.registration.scope).href,
-   badge:new URL('./pbsv-notification-badge.png?v=2',self.registration.scope).href,
+   badge:new URL('./pbsv-notification-shield-v3.svg',self.registration.scope).href,
    tag:String(data.tag||data.id||'pbsv-avís').slice(0,100),
    data:{url},renotify:false
   });
