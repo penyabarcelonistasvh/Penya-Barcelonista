@@ -22,7 +22,7 @@ async function vapidToken(endpoint,publicKey,privateKey){
  }
  const aud=new URL(endpoint).origin;
  const header=b64(enc.encode(JSON.stringify({typ:'JWT',alg:'ES256'})));
- const payload=b64(enc.encode(JSON.stringify({aud,exp:Math.floor(Date.now()/1000)+3600,sub:'https://cristiangarciajura.github.io/Penya-Barcelonista/'})));
+ const payload=b64(enc.encode(JSON.stringify({aud,exp:Math.floor(Date.now()/1000)+3600,sub:'https://penyabarcelonistasvh.github.io/Penya-Barcelonista/'})));
  const input=header+'.'+payload;
  const signature=new Uint8Array(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,enc.encode(input)));
  return 'vapid t='+input+'.'+b64(signature)+', k='+publicKey;
