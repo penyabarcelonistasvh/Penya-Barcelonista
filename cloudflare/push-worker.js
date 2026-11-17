@@ -3,7 +3,7 @@
 // El panell de publicació GitHub existent no es modifica.
 const HEADERS={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 const json=(obj,status=200,extra={})=>new Response(JSON.stringify(obj),{status,headers:{...HEADERS,'Content-Type':'application/json; charset=utf-8',...extra}});
-const allowedOrigin='https://cristiangarciajura.github.io';
+const allowedOrigin='https://penyabarcelonistasvh.github.io';
 const appPrefix='/Penya-Barcelonista/';
 function cors(req){const origin=req.headers.get('Origin');return origin===allowedOrigin?{'Access-Control-Allow-Origin':origin,'Vary':'Origin','Access-Control-Allow-Methods':'GET, POST, DELETE, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}:{}}
 function validEndpoint(url){try{const u=new URL(url);return u.protocol==='https:'&&u.username===''&&u.password===''&&u.hostname.length>3&&u.href.length<2048}catch{return false}}
