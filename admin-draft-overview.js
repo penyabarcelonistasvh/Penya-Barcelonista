@@ -2,7 +2,7 @@
 const modules=[
  {name:'Notícies',key:'pbsv-news-editor-v1',file:'noticies.json',field:'noticias',href:'./editor-noticies.html',normalize:a=>a.map(n=>({id:n.id||'',titulo:n.titulo||'',fecha:n.fecha||'',resumen:n.resumen||'',imagen:n.imagen||'',enlace:n.enlace||'',portada:n.portada!==false}))},
  {name:'Patrocinadors',key:'pbsv-editor-patrocinadors-v1',file:'patrocinadors.json',field:'sponsors',href:'./editor-patrocinadors.html'},
- {name:'Equips',key:'pbsv-teams-editor-v1',file:'equips.json',field:'teams',href:'./editor-equips.html'},
+ {name:'Equips',key:'pbsv-editor-equips-v1',file:'equips.json',field:'teams',href:'./editor-equips.html'},
  {name:'El club',key:'pbsv-club-editor-v1',file:'club.json',field:'sections',href:'./editor-club.html'}
 ];
 const root=document.getElementById('draftOverview');if(!root)return;
