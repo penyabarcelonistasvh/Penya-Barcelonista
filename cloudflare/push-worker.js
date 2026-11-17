@@ -1,4 +1,5 @@
 import {sendWebPush} from './webpush.js';
+import {sendWebPush} from './webpush.js';
 // PBSV Web Push: subscripcions protegides per Turnstile i prova privada d'enviament a un dispositiu.
 const ORIGIN='https://penyabarcelonistasvh.github.io';
 const HOSTS=new Set(['fcm.googleapis.com','updates.push.services.mozilla.com','web.push.apple.com','api.push.apple.com']);
@@ -207,7 +208,7 @@ export default {async scheduled(event,env,ctx){ctx.waitUntil(runDue(env))},async
  if(origin!==allowedOrigin)return json({error:'Origin no permès'},403);
  if(!env.PUSH_DB)return json({error:'Servei encara no configurat'},503,corsHeaders);
  if(u.pathname==='/api/push/public-key'&&req.method==='GET'){
-  return env.PUSH_VAPID_PUBLIC_KEY?json({publicKey:env.PUSH_VAPID_PUBLIC_KEY},200,corsHeaders):json({error:'VAPID pendent de configurar'},503,corsHeaders);
+  return env.PUSH_VAPID_PUBLIC_KEY?json({publicKey:env.PUSH_VAPID_PUBLIC_KEY,subscriptionsEnabled:true,turnstileSiteKey:null},200,corsHeaders):json({error:'VAPID pendent de configurar'},503,corsHeaders);
  }
  if(u.pathname==='/api/push/subscriptions'&&req.method==='POST'){
   if((Number(req.headers.get('Content-Length'))||0)>4096)return json({error:'Massa dades'},413,corsHeaders);
