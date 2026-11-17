@@ -64,5 +64,10 @@ async function load(){
  }else{renderWeekendAlerts(null,true);text($('dashSaturday'),'No s’han pogut carregar els partits');text($('dashSunday'),'');text($('dashMatchesDetail'),'Torna-ho a provar més tard')}
  const updated=$('dashUpdated');if(updated)updated.textContent='Dades consultades: '+new Intl.DateTimeFormat('ca-ES',{dateStyle:'short',timeStyle:'short'}).format(new Date());
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else load();
+let lastLoaded=0;
+async function refresh(){lastLoaded=Date.now();await load()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',refresh,{once:true});else refresh();
+// En tornar al panell després d'editar, actualitzar les dades públiques sense recarregar la pàgina.
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastLoaded>30000)refresh()});
+window.addEventListener('pageshow',e=>{if(e.persisted&&Date.now()-lastLoaded>30000)refresh()});
 })();
