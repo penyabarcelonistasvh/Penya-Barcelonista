@@ -203,25 +203,25 @@ export default {async scheduled(event,env,ctx){ctx.waitUntil(runDue(env))},async
  }
  const json=(data,status=200,extra={})=>new Response(JSON.stringify(data),{status,headers:{...headers,'Content-Type':'application/json; charset=utf-8',...extra}});
  const allowedOrigin=ORIGIN;const corsHeaders=origin===ORIGIN?{'Access-Control-Allow-Origin':ORIGIN,'Vary':'Origin','Access-Control-Allow-Methods':'GET, POST, DELETE, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}:{};
- if(req.method==='OPTIONS')return origin===allowedOrigin?new Response(null,{status:204,headers:{...HEADERS,...corsHeaders}}):json({error:'Origin no permès'},403);
+ if(req.method==='OPTIONS')return origin===allowedOrigin?new Response(null,{status:204,headers:{...headers,...corsHeaders}}):json({error:'Origin no permès'},403);
  if(origin!==allowedOrigin)return json({error:'Origin no permès'},403);
- if(!env.PUSH_DB)return json({error:'Servei encara no configurat'},503,headers);
+ if(!env.PUSH_DB)return json({error:'Servei encara no configurat'},503,corsHeaders);
  if(u.pathname==='/api/push/public-key'&&req.method==='GET'){
-  return env.PUSH_VAPID_PUBLIC_KEY?json({publicKey:env.PUSH_VAPID_PUBLIC_KEY},200,headers):json({error:'VAPID pendent de configurar'},503,headers);
+  return env.PUSH_VAPID_PUBLIC_KEY?json({publicKey:env.PUSH_VAPID_PUBLIC_KEY},200,corsHeaders):json({error:'VAPID pendent de configurar'},503,corsHeaders);
  }
  if(u.pathname==='/api/push/subscriptions'&&req.method==='POST'){
-  if((Number(req.headers.get('Content-Length'))||0)>4096)return json({error:'Massa dades'},413,headers);
-  let data;try{data=await req.json()}catch{return json({error:'JSON incorrecte'},400,headers)}
-  if(!validEndpoint(data?.endpoint)||!validKey(data?.keys?.p256dh)||!validKey(data?.keys?.auth))return json({error:'Subscripció no vàlida'},400,headers);
+  if((Number(req.headers.get('Content-Length'))||0)>4096)return json({error:'Massa dades'},413,corsHeaders);
+  let data;try{data=await req.json()}catch{return json({error:'JSON incorrecte'},400,corsHeaders)}
+  if(!validEndpoint(data?.endpoint)||!validKey(data?.keys?.p256dh)||!validKey(data?.keys?.auth))return json({error:'Subscripció no vàlida'},400,corsHeaders);
   const id=await hash(data.endpoint);
   await env.PUSH_DB.prepare('INSERT INTO push_subscriptions (id,endpoint,p256dh,auth) VALUES (?,?,?,?) ON CONFLICT(endpoint) DO UPDATE SET p256dh=excluded.p256dh,auth=excluded.auth,updated_at=CURRENT_TIMESTAMP,disabled_at=NULL').bind(id,data.endpoint,data.keys.p256dh,data.keys.auth).run();
-  return json({ok:true},201,headers);
+  return json({ok:true},201,corsHeaders);
  }
  if(u.pathname==='/api/push/subscriptions'&&req.method==='DELETE'){
-  let data;try{data=await req.json()}catch{return json({error:'JSON incorrecte'},400,headers)}
-  if(!validEndpoint(data?.endpoint))return json({error:'Subscripció no vàlida'},400,headers);
+  let data;try{data=await req.json()}catch{return json({error:'JSON incorrecte'},400,corsHeaders)}
+  if(!validEndpoint(data?.endpoint))return json({error:'Subscripció no vàlida'},400,corsHeaders);
   await env.PUSH_DB.prepare('UPDATE push_subscriptions SET disabled_at=CURRENT_TIMESTAMP WHERE id=?').bind(await hash(data.endpoint)).run();
-  return json({ok:true},200,headers);
+  return json({ok:true},200,corsHeaders);
  }
- return json({error:'Ruta no disponible'},404,headers);
+ return json({error:'Ruta no disponible'},404,corsHeaders);
 }};
