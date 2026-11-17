@@ -87,18 +87,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  .hero-actions .btn{min-height:44px}
  }
  @media(max-width:520px){
- .navwrap{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:10px;padding:12px 14px}
- .navwrap .brand{order:0;flex:1 1 0;min-width:0;max-width:none}
- .navwrap .brandname{min-width:0;font-size:11px;line-height:1.25;letter-spacing:0}
- .navwrap .brandname small{font-size:9px}
- .navwrap .brand img{width:39px;height:39px;flex-shrink:0}
- .navwrap #pbsvBell,.navwrap .pbsv-bell{order:1;flex:0 0 auto;min-width:44px;min-height:44px}
- .navwrap::after{content:'';order:2;flex-basis:100%;height:0}
- .navwrap .menu-toggle{order:3;flex:0 0 auto;min-height:44px;min-width:90px;padding:8px 12px;font-size:inherit!important;white-space:nowrap}
- .navwrap .menu-toggle::after{content:none!important}
- .navwrap .lang-switch{order:4;flex:0 0 auto;min-height:44px;min-width:44px}
- .navwrap .pbsv-compact-instagram{order:5;flex:0 0 auto;min-height:44px;padding:8px 10px;font-size:inherit!important;white-space:nowrap}
- .navwrap .pbsv-compact-instagram::after{content:none!important}
+ .navwrap{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto auto;align-items:center;column-gap:9px;row-gap:10px;padding:12px 14px}
+ .navwrap>.brand{grid-column:1/3;grid-row:1;min-width:0;max-width:100%;margin:0;gap:9px}
+ .navwrap>.brand .brandname{min-width:0;font-size:11px;line-height:1.3;letter-spacing:0}
+ .navwrap>.brand .brandname small{font-size:9px;letter-spacing:.04em}
+ .navwrap>.brand img{width:40px;height:40px;flex-shrink:0}
+ .navwrap>#pbsvBell{grid-column:3;grid-row:1;justify-self:end;min-width:44px;min-height:44px;margin:0}
+ .navwrap>#menuToggle{grid-column:1;grid-row:2;justify-self:start;display:block;min-width:90px;min-height:44px;padding:9px 13px;font-size:14px!important;white-space:nowrap}
+ .navwrap>#menuToggle::after{content:none!important}
+ .navwrap>#langSwitch{grid-column:2;grid-row:2;justify-self:end;margin:0;min-width:44px;min-height:44px}
+ .navwrap>.instagram-link{grid-column:3;grid-row:2;justify-self:end;min-height:44px;display:inline-flex;align-items:center;padding:9px 12px;font-size:12px!important;white-space:nowrap}
+ .navwrap>.instagram-link::after{content:none!important}
+ .navwrap>#mainNav{grid-column:1/-1;grid-row:3}
 
  .brand{gap:8px}.brandname{font-size:11px;letter-spacing:0}
  .brandname small{font-size:9px;letter-spacing:.06em}
@@ -123,5 +123,3 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  document.head.append(style);
 })();
 
-/* Capçalera compacta: mantenir l'accés a Instagram en pantalles estretes. */
-(()=>{'use strict';function init(){const nav=document.querySelector('.navwrap');if(!nav)return;for(const el of nav.querySelectorAll('a,button')){if(/instagram/i.test((el.textContent||'').trim())&&!el.classList.contains('pbsv-compact-instagram')){el.classList.add('pbsv-compact-instagram');if(!el.getAttribute('aria-label'))el.setAttribute('aria-label','Instagram de la Penya');break}}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init()})();
