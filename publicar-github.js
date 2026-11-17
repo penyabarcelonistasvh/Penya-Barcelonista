@@ -1,6 +1,6 @@
 /* Publicació guiada: cap credencial ni token al navegador. */
 (function(){
- const repo='https://github.com/cristiangarciajura/Penya-Barcelonista/edit/main/data/';
+ const repo='https://github.com/penyabarcelonistasvh/Penya-Barcelonista/edit/main/data/';
  const files={'editor-equips.html':'equips.json','editor-club.html':'club.json','editor-noticies.html':'noticies.json','editor-patrocinadors.html':'patrocinadors.json','editor-partits.html':'partits-cap-setmana.json'};
  const page=location.pathname.split('/').pop(),file=files[page];
  if(!file)return;
@@ -27,7 +27,7 @@
    const r=await fetch('./api/publish',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-PBSV-Action':'publish'},body:JSON.stringify({file,content:value})});
    const body=await r.text();
    if(!r.ok)throw Error(body);
-   output.textContent='Publicat correctament a GitHub. La web pot trigar uns minuts a actualitzar-se.';
+   output.textContent='Publicat correctament a GitHub. La web pot trigar uns minuts a actualitzar-se.';window.dispatchEvent(new CustomEvent('pbsv:published',{detail:{file,content:value}}));
   }catch(e){output.textContent='No s’ha pogut publicar: '+e.message}
   finally{auto.disabled=false}
  };
