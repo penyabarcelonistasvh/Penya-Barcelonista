@@ -75,3 +75,32 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',removeNotice,{once:true});else removeNotice();
 })();
+
+/* Poliment mòbil i accessibilitat: només estils, cap canvi de funcionalitat. */
+(()=>{'use strict';
+ if(document.getElementById('pbsv-mobile-polish-20261118'))return;
+ const style=document.createElement('style');style.id='pbsv-mobile-polish-20261118';
+ style.textContent=`@media(max-width:800px){
+ .navwrap{gap:9px;padding:10px 14px}
+ .menu-toggle,.lang-switch,.pbsv-bell{min-height:44px;min-width:44px}
+ #mainNav button{min-height:46px}
+ .hero-actions .btn{min-height:44px}
+ }
+ @media(max-width:520px){
+ .navwrap{gap:7px;padding:9px 12px}
+ .brand{gap:8px}.brandname{font-size:11px;letter-spacing:0}
+ .brandname small{font-size:9px;letter-spacing:.06em}
+ .brand img{width:39px;height:39px;flex-shrink:0}
+ main{padding-left:12px;padding-right:12px}
+ .hero{min-height:0;padding:28px 20px 32px}
+ .hero h1{font-size:clamp(29px,8vw,39px);line-height:1.08}
+ .hero p{line-height:1.55}.hero-actions{gap:9px}
+ .hero-actions .btn{flex:1 1 145px;text-align:center;padding:12px}
+ .section-head h2{font-size:22px}.news-body{padding:16px}
+ .news-body h3{line-height:1.35}
+ .pbsv-alert-dialog{max-height:calc(100dvh - 24px);overflow:auto}
+ }
+ :where(button,a,input,select,textarea):focus-visible{outline:3px solid #f2c51d;outline-offset:3px}
+ @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}`;
+ document.head.append(style);
+})();
