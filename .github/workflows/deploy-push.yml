@@ -1,0 +1,60 @@
+name: Desplegar notificacions PBSV a Cloudflare
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-pbsv-push
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Obtenir el codi
+        uses: actions/checkout@v4
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar configuració sense mostrar secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PBSV_PUSH_D1_DATABASE_ID: ${{ secrets.PBSV_PUSH_D1_DATABASE_ID }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Falta CLOUDFLARE_API_TOKEN"; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Falta CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+          test -n "$PBSV_PUSH_D1_DATABASE_ID" || { echo "::error::Falta PBSV_PUSH_D1_DATABASE_ID"; exit 1; }
+      - name: Crear configuració del Worker
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PBSV_PUSH_D1_DATABASE_ID: ${{ secrets.PBSV_PUSH_D1_DATABASE_ID }}
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const account = process.env.CLOUDFLARE_ACCOUNT_ID;
+          const database = process.env.PBSV_PUSH_D1_DATABASE_ID;
+          if (!/^[a-f0-9]{32}$/i.test(account) || !/^[a-f0-9-]{32,36}$/i.test(database)) {
+            throw new Error('Identificadors Cloudflare no vàlids');
+          }
+          const config = {
+            name: 'pbsv-push',
+            main: './cloudflare/push-worker.js',
+            compatibility_date: '2026-11-01',
+            account_id: account,
+            workers_dev: true,
+            keep_vars: true,
+            d1_databases: [{ binding: 'PUSH_DB', database_id: database }]
+          };
+          fs.writeFileSync('wrangler.push.generated.json', JSON.stringify(config));
+          NODE
+      - name: Desplegar pbsv-push
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@4 deploy --config wrangler.push.generated.json
