@@ -1,0 +1,16 @@
+name: Auditar peso de portada
+on:
+  push:
+    paths:
+      - 'scripts/auditar-peso-portada.py'
+      - '.github/workflows/auditar-peso-portada.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  auditoria:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Medir recursos incrustados de index.html
+        run: python3 scripts/auditar-peso-portada.py
