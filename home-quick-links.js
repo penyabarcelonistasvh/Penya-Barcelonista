@@ -142,3 +142,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  document.head.append(style);
 })();
 
+
+/* Mantenir els accessos rapids i la instal·lacio en l'idioma triat. */
+(()=>{'use strict';function translate(){const es=document.documentElement.lang==='es';const install=document.getElementById('pbsv-install-card');if(install){const title=install.querySelector('h3'),desc=install.querySelector('p');if(title)title.textContent=es?'📲 Instala la app':'📲 Instal·la l’app';if(desc&&!desc.dataset.installBusy)desc.textContent=es?'Lleva la Penya a tu móvil en un momento':'Porta la Penya al teu mòbil en un moment'}document.querySelectorAll('#home .quick[data-quick-target]').forEach(card=>{const title=card.querySelector('h3');if(title)card.setAttribute('aria-label',title.textContent.trim())})}document.addEventListener('pbsv:languagechange',translate);if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',translate,{once:true});else translate()})();
