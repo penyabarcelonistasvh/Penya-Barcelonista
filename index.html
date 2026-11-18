@@ -105,6 +105,8 @@ footer{background:#061126;color:#d6dfed;padding:30px 22px}.footer-inner{max-widt
 .lang-switch,.instagram-link{border-radius:8px}
 @media(max-width:800px){.navwrap{column-gap:7px;row-gap:8px}.brand{gap:7px}.menu-toggle,.lang-switch,.instagram-link{flex:0 0 auto}}
 @media(max-width:520px){.navwrap{padding:9px 10px;column-gap:6px}.brand img{width:40px;height:40px}.brandname{font-size:10px;letter-spacing:0}.brandname small{font-size:8px;letter-spacing:.04em}.menu-toggle,.lang-switch,.instagram-link{font-size:9px;padding:5px 6px}.lang-switch{margin-left:0}.instagram-link{padding:5px 6px}.pbsv-bell{width:32px;height:32px}.pbsv-bell svg{width:18px;height:18px}}
+
+.results-filters{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 10px}.results-filter{border:1px solid #d9e3ef;background:white;color:#10264b;border-radius:999px;padding:9px 15px;font-size:12px;font-weight:750;cursor:pointer;min-height:38px}.results-filter.selected{background:#10264b;border-color:#10264b;color:white}.results-count{font-size:12px;color:#68748a;margin:10px 0 15px}.results-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.results-card{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;background:#fff;border:1px solid #e4e9f1;border-radius:15px;padding:16px;box-shadow:0 5px 18px #07152d0a}.results-card h3{font-size:14px;line-height:1.3;margin:0 0 5px;overflow-wrap:anywhere}.results-card small{display:block;color:#68748a;font-size:11px}.results-card a{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:9px;padding:9px 11px;background:#eaf1fb;color:#0756a5;font-size:11px;font-weight:800;text-decoration:none;min-height:38px}.results-pending{font-size:11px;color:#68748a;text-align:right;max-width:120px}@media(max-width:900px){.results-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.results-grid{grid-template-columns:minmax(0,1fr)}.results-card{padding:13px}}
 </style><link rel="stylesheet" href="./news-carousel-enhancement.css?v=20261113-mobile3"><link rel="stylesheet" href="./weekend-matches.css?v=20261113-mobile3"><link rel="stylesheet" href="./home-quick-links.css?v=20261113-mobile3"></head>
 <body>
 <header>
@@ -121,7 +123,7 @@ footer{background:#061126;color:#d6dfed;padding:30px 22px}.footer-inner{max-widt
   <nav id="mainNav" aria-label="Navegació principal">
    <button class="active" data-view="home">Inici</button>
    <button data-view="teams">Equips</button>
-   <button data-view="store">Botiga</button>
+   <button data-view="store">Botiga</button><button data-view="results">Resultats i classificacions</button>
    <button data-view="club">El club</button>
    <button data-view="sponsors">Patrocinadors</button>
   </nav>
@@ -158,7 +160,11 @@ footer{background:#061126;color:#d6dfed;padding:30px 22px}.footer-inner{max-widt
  <p class="team-count" id="teamCount" role="status" aria-live="polite" aria-atomic="true"></p><div class="team-grid" id="teamGrid"></div>
  <div class="notice" data-ca="Ja hi ha fotografies i plantilles reals dels equips disponibles. La resta de fotografies es completaran més endavant." data-es="Ya hay fotografías y plantillas reales de los equipos disponibles. Las fotografías restantes se completarán más adelante.">Ja hi ha fotografies i plantilles reals dels equips disponibles. La resta de fotografies es completaran més endavant.</div>
 </section>
-<section class="view" id="store">
+<section class="view" id="results">
+<div class="page-title"><div class="kicker" data-ca="Competicions de la Penya" data-es="Competiciones de la Penya">Competicions de la Penya</div><h1 data-ca="Resultats i classificacions" data-es="Resultados y clasificaciones">Resultats i classificacions</h1><p data-ca="Consulta els resultats i la classificació de cada equip directament a la Federació Catalana de Futbol." data-es="Consulta los resultados y la clasificación de cada equipo directamente en la Federación Catalana de Fútbol.">Consulta els resultats i la classificació de cada equip directament a la Federació Catalana de Futbol.</p></div>
+<div class="results-filters" id="resultsFilters"><button class="results-filter selected" data-results-group="all" aria-pressed="true" data-ca="Tots" data-es="Todos">Tots</button><button class="results-filter" data-results-group="masc" aria-pressed="false" data-ca="Masculí" data-es="Masculino">Masculí</button><button class="results-filter" data-results-group="fem" aria-pressed="false" data-ca="Femení" data-es="Femenino">Femení</button><button class="results-filter" data-results-group="genuine" aria-pressed="false" data-ca="Genuïns" data-es="Genuinos">Genuïns</button></div>
+<p id="resultsCount" class="results-count" role="status" aria-live="polite"></p><div class="results-grid" id="resultsGrid"></div>
+</section><section class="view" id="store">
  <div class="page-title"><div class="kicker">Vesteix els nostres colors</div><h1 data-ca="Botiga del club" data-es="Tienda del club">Botiga del club</h1><p>Tot el material i la roba oficial de la Penya, en un mateix lloc.</p></div>
  <div class="store-panel"><div><div class="eyebrow">Botiga oficial</div><h2>Porta la Penya amb tu.</h2><p>Consulta el catàleg de roba, equipacions i productes oficials del club.</p><a class="btn gold store-button" href="https://www.futbolemotion.com/es/categoria/colectivos/equipaciones-penya-blaugrana-sant-vicents-del-horts" target="_blank" rel="noopener" data-ca="Visita la botiga oficial ↗" data-es="Visita la tienda oficial ↗">Visita la botiga oficial ↗</a></div><div class="store-icon">🛍️</div></div>
 </section>
@@ -294,7 +300,7 @@ const extraTranslations=[
  ['#home .quick-grid .quick:nth-child(3) p','Una entitat amb orgull, valors i història des de 1978.','Una entidad con orgullo, valores e historia desde 1978.']
 ];
 extraTranslations.forEach(([selector,ca,es])=>{const el=document.querySelector(selector);if(el){el.dataset.ca=ca;el.dataset.es=es}});
-const translations=[['Inici','Inicio'],['Equips','Equipos'],['Botiga','Tienda'],['El club','El club'],['Patrocinadors','Patrocinadores']];
+const translations=[['Inici','Inicio'],['Equips','Equipos'],['Botiga','Tienda'],['Resultats i classificacions','Resultados y clasificaciones'],['El club','El club'],['Patrocinadors','Patrocinadores']];
 function applySiteLanguage(){document.documentElement.lang=siteLang;document.getElementById('langSwitch').textContent=siteLang==='ca'?'ES':'CAT';document.querySelectorAll('[data-ca][data-es]').forEach(el=>{el.textContent=el.dataset[siteLang]});nav.forEach((b,i)=>b.textContent=translations[i][siteLang==='ca'?0:1]);renderClubTeams();document.dispatchEvent(new CustomEvent('pbsv:languagechange',{detail:{language:siteLang}}))}
 document.getElementById('langSwitch').addEventListener('click',()=>{siteLang=siteLang==='ca'?'es':'ca';try{localStorage.setItem('pbsv-language',siteLang)}catch(_){}applySiteLanguage()});
 applySiteLanguage();
@@ -468,4 +474,4 @@ fetch('./data/club.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('club
  window.addEventListener('focus',update);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
  update();
-})();</script><script src="./news-carousel-enhancement.js?v=20261113-mobile3" defer></script><script src="./weekend-matches.js?v=20261113-mobile3" defer></script><script src="./home-quick-links.js?v=20261119-i18n1" defer></script><script src="./directe-cap-setmana-link.js?v=20261113-beta1" defer></script></body></html>
+})();</script><script src="./news-carousel-enhancement.js?v=20261113-mobile3" defer></script><script src="./weekend-matches.js?v=20261113-mobile3" defer></script><script src="./home-quick-links.js?v=20261119-i18n1" defer></script><script src="./directe-cap-setmana-link.js?v=20261113-beta1" defer></script><script src="./results-standings.js?v=20261119-1" defer></script></body></html>
