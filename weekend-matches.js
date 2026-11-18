@@ -15,7 +15,7 @@ function update(card,item,day){
  if(card)card.setAttribute('aria-busy','false');
  if(!card||!item||(!item.title&&!item.image&&!item.comment))return;
  const img=card.querySelector('img.news-photo');
- if(img&&validImage(item.image)){img.style.visibility='hidden';img.removeAttribute('data-current-poster');img.alt='Cartell dels '+(item.title||'partits');img.decoding='async';const src=item.image;img.onload=()=>{if(img.src===src){img.dataset.currentPoster='yes';img.style.visibility='visible';const open=card.querySelector('.photo-open');if(open){open.disabled=false;open.removeAttribute('aria-disabled')}}};img.onerror=()=>{img.style.visibility='hidden';const open=card.querySelector('.photo-open');if(open){open.disabled=true;open.setAttribute('aria-disabled','true')}};img.src=src;if(img.complete&&img.naturalWidth)img.onload();}
+ if(img&&validImage(item.image)){img.style.visibility='hidden';img.removeAttribute('data-current-poster');img.alt='Cartell dels '+(item.title||'partits');img.decoding='async';const src=item.image;img.onload=()=>{if(img.naturalWidth>0){img.dataset.currentPoster='yes';img.style.visibility='visible';const open=card.querySelector('.photo-open');if(open){open.disabled=false;open.removeAttribute('aria-disabled')}}};img.onerror=()=>{img.style.visibility='hidden';const open=card.querySelector('.photo-open');if(open){open.disabled=true;open.setAttribute('aria-disabled','true')}};img.src=src;if(img.complete&&img.naturalWidth)img.onload();}
  const title=card.querySelector('.news-body h3');if(title&&item.title)title.textContent=item.title;
  const paragraph=card.querySelector('.news-body p');if(paragraph&&item.comment)paragraph.textContent=item.comment;
  const meta=card.querySelector('.news-body .meta');
