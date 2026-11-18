@@ -52,3 +52,15 @@ for group in duplicates:
     indexes = ", ".join(f"{i:02d}" for i, _ in group)
     print(f"  Imatges {indexes} | {group[0][1]:,} bytes cadascuna")
 print(f"Estalvi teòric de referenciar una sola còpia per grup: {sum((len(g)-1)*g[0][1] for g in duplicates):,} bytes")
+
+# Context de referència: identificar l'element que conté cada imatge sense exposar base64.
+print("\nContext de cada imatge (etiqueta i atribut, si es pot identificar):")
+for index, match in enumerate(re.finditer(r'''data:image/[^\s"'<>)]{20,}''', html, re.I), 1):
+    prefix = html[max(0, match.start()-500):match.start()]
+    tag_start = prefix.rfind("<")
+    fragment = prefix[tag_start:] if tag_start >= 0 else ""
+    tag_match = re.match(r"<([a-z][a-z0-9-]*)\\b", fragment, re.I)
+    tag = tag_match.group(1).lower() if tag_match else "desconeguda"
+    attr_match = re.search(r"""([:\w-]+)\s*=\s*['"][^'"]*$""", fragment)
+    attr = attr_match.group(1) if attr_match else "desconegut"
+    print(f"  {index:02d}. etiqueta={tag[:24]} atribut={attr[:36]}")
