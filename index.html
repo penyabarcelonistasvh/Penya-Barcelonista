@@ -178,7 +178,22 @@ footer{background:#061126;color:#d6dfed;padding:30px 22px}.footer-inner{max-widt
 <footer><div class="footer-inner"><div><strong>Penya Barcelonista Sant Vicenç dels Horts</strong><br><small>Des de 1978 · Una penya, una família</small></div><small><a href="https://www.instagram.com/penyabarcelonistasv/?hl=es" target="_blank" rel="noopener noreferrer">Instagram oficial ↗</a> · Temporada 2026/27</small></div></footer>
 <script>
 const views=[...document.querySelectorAll('.view')], nav=[...document.querySelectorAll('nav button')];
-function showView(id){if(!views.some(v=>v.id===id))return;views.forEach(v=>v.classList.toggle('active',v.id===id));nav.forEach(b=>{const active=b.dataset.view===id;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});document.getElementById('mainNav').classList.remove('open');syncMenuLabel(false);window.scrollTo({top:0,behavior:'smooth'});}
+const validView=id=>views.some(v=>v.id===id);
+const viewFromUrl=()=>{const id=decodeURIComponent(window.location.hash.slice(1));return validView(id)?id:'home'};
+let currentView=viewFromUrl();
+function showView(id,{history=true}={}){
+ if(!validView(id))return;
+ if(history&&id!==currentView)window.history.pushState({pbsvView:id},'',id==='home'?window.location.pathname+window.location.search:'#'+encodeURIComponent(id));
+ currentView=id;
+ views.forEach(v=>v.classList.toggle('active',v.id===id));
+ nav.forEach(b=>{const active=b.dataset.view===id;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+ document.getElementById('mainNav').classList.remove('open');
+ syncMenuLabel(false);
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+window.history.replaceState({pbsvView:currentView},'',window.location.href);
+showView(currentView,{history:false});
+window.addEventListener('popstate',()=>showView(viewFromUrl(),{history:false}));
 nav.forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();showView(b.dataset.go)}));
 document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();showView('home')});
