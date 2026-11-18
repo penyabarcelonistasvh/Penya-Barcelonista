@@ -4,3 +4,6 @@
 #home .quick[data-quick-target]:active{transform:scale(.985)}
 @media(hover:none){#home .quick[data-quick-target]:hover{transform:none;box-shadow:none}}
 @media(prefers-reduced-motion:reduce){#home .quick[data-quick-target]{transition:none}#home .quick[data-quick-target]:hover,#home .quick[data-quick-target]:active{transform:none}}
+
+/* Renderitzar les targetes de patrocinadors fora de pantalla només quan cal. */
+@supports(content-visibility:auto){#home #pbsvSponsorGrid .pbsv-sponsor-card{content-visibility:auto;contain-intrinsic-size:auto 180px}}
