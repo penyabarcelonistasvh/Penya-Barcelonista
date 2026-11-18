@@ -1,0 +1,23 @@
+name: Generar candidat de portada optimitzada
+on:
+  push:
+    paths:
+      - 'scripts/generar-portada-optimizada.py'
+      - '.github/workflows/generar-candidat-portada.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generar i validar candidat sense publicar
+        run: python3 scripts/generar-portada-optimizada.py
+      - name: Guardar candidat per revisar
+        uses: actions/upload-artifact@v4
+        with:
+          name: portada-optimitzada-candidata
+          path: dist/portada-optimitzada/
+          if-no-files-found: error
+          retention-days: 7
