@@ -1,0 +1,54 @@
+name: Publicar vista previa de portada (sin tocar la web principal)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Crear copia aislada para previsualizacion
+        run: |
+          set -euo pipefail
+          git fetch origin optimitzacio/portada-imatges-externes
+          mkdir -p preview/portada-optimitzada
+          # Copiar recursos publicos al subdirectorio para mantener rutas relativas.
+          for file in *.html *.css *.js *.png *.svg *.webmanifest; do
+            [ -f "$file" ] || continue
+            case "$file" in admin.html|editor-*.html|vapid-claus.html) continue ;; esac
+            cp "$file" preview/portada-optimitzada/
+          done
+          for dir in assets data; do
+            [ -d "$dir" ] && cp -a "$dir" preview/portada-optimitzada/
+          done
+          git show origin/optimitzacio/portada-imatges-externes:index.html > preview/portada-optimitzada/index.html
+          mkdir -p preview/portada-optimitzada/assets/optimized
+          git archive origin/optimitzacio/portada-imatges-externes assets/optimized | tar -x -C preview/portada-optimitzada/
+          test "$(wc -c < preview/portada-optimitzada/index.html)" -lt 100000
+          test "$(find preview/portada-optimitzada/assets/optimized -type f | wc -l)" -eq 11
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("preview/portada-optimitzada")
+          h = (p/"index.html").read_text()
+          import re
+          refs = re.findall(r'assets/optimized/embedded-[0-9a-f]{16}\\.(?:jpg|png|webp|gif)', h)
+          assert len(refs) == 15, len(refs)
+          assert all((p/ref).is_file() for ref in refs)
+          print("OK: 15 referencies i 11 imatges disponibles")
+          PY
+      - name: Publicar solo la carpeta de prueba
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add preview/portada-optimitzada/
+          if git diff --cached --quiet; then
+            echo "La vista previa ya esta actualizada."
+            exit 0
+          fi
+          git commit -m "Publicar vista previa aislada de portada optimizada"
+          git push origin HEAD:main
