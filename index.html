@@ -69,7 +69,7 @@ footer{background:#061126;color:#d6dfed;padding:30px 22px}.footer-inner{max-widt
 }
 
 /* Recordatori discret per activar avisos: només si no hi ha permís. */
-.pbsv-permission-banner{position:fixed;z-index:90;top:calc(env(safe-area-inset-top, 0px) + 8px);left:50%;transform:translateX(-50%);width:min(480px,calc(100% - 24px));display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #d9e3f1;border-radius:14px;background:#fff;color:#10264b;box-shadow:0 8px 28px #07152d38;font-size:13px;line-height:1.4}
+.pbsv-permission-banner{position:relative;z-index:1;margin:10px auto;width:min(680px,calc(100% - 24px));display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #d9e3f1;border-radius:14px;background:#fff;color:#10264b;box-shadow:0 8px 28px #07152d38;font-size:13px;line-height:1.4}
 .pbsv-permission-banner[hidden]{display:none}
 .pbsv-permission-banner .pbsv-permission-text{flex:1;min-width:0}
 .pbsv-permission-banner button{border:0;border-radius:9px;min-height:36px;padding:7px 10px;font-size:12px;font-weight:800;cursor:pointer}
@@ -120,6 +120,7 @@ footer{background:#061126;color:#d6dfed;padding:30px 22px}.footer-inner{max-widt
   </nav>
  </div>
 </header>
+<aside class="pbsv-permission-banner" id="pbsvPermissionBanner" aria-label="Activar notificacions" hidden><span class="pbsv-permission-text" id="pbsvPermissionText">🔔 Activa els avisos de la Penya per no perdre't novetats.</span><button type="button" class="pbsv-permission-activate" id="pbsvPermissionActivate">Activar</button><button type="button" class="pbsv-permission-dismiss" id="pbsvPermissionDismiss" aria-label="Ara no">×</button></aside>
 <main>
 <section class="view active" id="home">
 
@@ -170,7 +171,7 @@ footer{background:#061126;color:#d6dfed;padding:30px 22px}.footer-inner{max-widt
  <div class="pbsv-sponsor-grid" id="pbsvSponsorGrid"></div>
 </section>
 </main>
-<aside class="pbsv-permission-banner" id="pbsvPermissionBanner" aria-label="Activar notificacions" hidden><span class="pbsv-permission-text" id="pbsvPermissionText">🔔 Activa els avisos de la Penya per no perdre't novetats.</span><button type="button" class="pbsv-permission-activate" id="pbsvPermissionActivate">Activar</button><button type="button" class="pbsv-permission-dismiss" id="pbsvPermissionDismiss" aria-label="Ara no">×</button></aside>
+
 <div class="pbsv-alert-overlay" id="pbsvAlertOverlay" aria-hidden="true"><div class="pbsv-alert-dialog" role="dialog" aria-modal="true" aria-labelledby="pbsvAlertTitle" tabindex="-1"><div class="pbsv-alert-head"><h2 id="pbsvAlertTitle">🔔 Avisos de la Penya</h2><button type="button" class="pbsv-alert-close" id="pbsvAlertClose" aria-label="Tancar avisos">×</button></div><section class="notify-panel" id="avisos" aria-label="Avisos de la Penya">
  <div style="font-size:11px;color:#f2c51d;font-weight:900;letter-spacing:1.5px">PBSV · NOVEDADES</div>
  <h2 data-ca="Avisos de partits i esdeveniments" data-es="Avisos de partidos y eventos">Avisos de partits i esdeveniments</h2>
