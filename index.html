@@ -425,10 +425,11 @@ fetch('./data/club.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('club
  if(!banner||!('Notification' in window)||!window.isSecureContext)return;
  const key='pbsv-notification-reminder-dismissed';
  let dismissed=false;try{dismissed=sessionStorage.getItem(key)==='1'}catch(_){}
- function update(){const permission=Notification.permission;banner.hidden=dismissed||permission==='granted';if(permission==='denied'){message.textContent='🔔 Els avisos estan bloquejats. Pots activar-los des dels permisos del navegador.';activate.textContent='Com fer-ho'}else{message.textContent='🔔 Activa els avisos de la Penya per no perdre\'t novetats.';activate.textContent='Activar'}}
+ function update(){const permission=Notification.permission,es=document.documentElement.lang==='es';banner.hidden=dismissed||permission==='granted';banner.setAttribute('aria-label',es?'Activar notificaciones':'Activar notificacions');dismiss.setAttribute('aria-label',es?'Ahora no':'Ara no');if(permission==='denied'){message.textContent=es?'🔔 Las notificaciones están bloqueadas. Puedes activarlas desde los permisos del navegador.':'🔔 Els avisos estan bloquejats. Pots activar-los des dels permisos del navegador.';activate.textContent=es?'Cómo hacerlo':'Com fer-ho'}else{message.textContent=es?'🔔 Activa las notificaciones de la Penya para no perderte novedades.':'🔔 Activa els avisos de la Penya per no perdre\'t novetats.';activate.textContent=es?'Activar':'Activar'}}
  dismiss.addEventListener('click',()=>{dismissed=true;banner.hidden=true;try{sessionStorage.setItem(key,'1')}catch(_){}});
  activate.addEventListener('click',()=>{banner.hidden=true;document.getElementById('pbsvBell')?.click();if(Notification.permission==='denied'){document.getElementById('notifyEnable')?.focus()}else{document.getElementById('notifyEnable')?.focus()}});
  document.getElementById('notifyEnable')?.addEventListener('click',()=>setTimeout(update,800));
+ document.addEventListener('pbsv:languagechange',update);
  window.addEventListener('focus',update);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
  update();
