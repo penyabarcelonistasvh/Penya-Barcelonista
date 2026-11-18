@@ -23,3 +23,16 @@ for name, size in sizes.items():
 print(f"Imatges data URI detectades: {len(data_uris)}")
 print(f"Scripts en línia: {len(inline_scripts)}; blocs CSS: {len(inline_styles)}")
 print("Nota: les categories poden solapar-se; no se sumen com a parts exclusives.")
+
+# Inventari segur: mida, tipus i ubicació aproximada; mai imprimir dades base64.
+print("\nDetall de les imatges incrustades (sense contingut):")
+for index, match in enumerate(re.finditer(r'''data:image/[^\s"'<>)]{20,}''', html, re.I), 1):
+    uri = match.group()
+    mime = uri.split(";", 1)[0].removeprefix("data:")
+    line = html.count("\n", 0, match.start()) + 1
+    context = html[max(0, match.start() - 220):match.start()].lower()
+    location = ("script" if "<script" in context else
+                "style" if "<style" in context else
+                "atribut o contingut HTML")
+    print(f"  {index:02d}. {len(uri):>10,} bytes | {mime[:40]:<18} | línia {line} | {location}")
+print("Cap imatge s'ha extret ni modificat.")
