@@ -178,11 +178,12 @@ footer{background:#061126;color:#d6dfed;padding:30px 22px}.footer-inner{max-widt
 <footer><div class="footer-inner"><div><strong>Penya Barcelonista Sant Vicenç dels Horts</strong><br><small>Des de 1978 · Una penya, una família</small></div><small><a href="https://www.instagram.com/penyabarcelonistasv/?hl=es" target="_blank" rel="noopener noreferrer">Instagram oficial ↗</a> · Temporada 2026/27</small></div></footer>
 <script>
 const views=[...document.querySelectorAll('.view')], nav=[...document.querySelectorAll('nav button')];
-function showView(id){if(!views.some(v=>v.id===id))return;views.forEach(v=>v.classList.toggle('active',v.id===id));nav.forEach(b=>{const active=b.dataset.view===id;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});document.getElementById('mainNav').classList.remove('open');document.getElementById('menuToggle').setAttribute('aria-expanded','false');window.scrollTo({top:0,behavior:'smooth'});}
+function showView(id){if(!views.some(v=>v.id===id))return;views.forEach(v=>v.classList.toggle('active',v.id===id));nav.forEach(b=>{const active=b.dataset.view===id;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});document.getElementById('mainNav').classList.remove('open');syncMenuLabel(false);window.scrollTo({top:0,behavior:'smooth'});}
 nav.forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();showView(b.dataset.go)}));
 document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();showView('home')});
-document.getElementById('menuToggle').setAttribute('aria-controls','mainNav');document.getElementById('menuToggle').setAttribute('aria-expanded','false');document.getElementById('menuToggle').addEventListener('click',()=>{const open=document.getElementById('mainNav').classList.toggle('open');document.getElementById('menuToggle').setAttribute('aria-expanded',String(open))});
+function syncMenuLabel(open){const button=document.getElementById('menuToggle');button.setAttribute('aria-expanded',String(open));button.setAttribute('aria-label',open?(button.dataset.closeLabel||'Tancar menú'):(button.dataset.openLabel||'Obrir menú'))}
+document.getElementById('menuToggle').setAttribute('aria-controls','mainNav');document.getElementById('menuToggle').setAttribute('aria-expanded','false');document.getElementById('menuToggle').addEventListener('click',()=>{const open=document.getElementById('mainNav').classList.toggle('open');syncMenuLabel(open)});
 const details={
  history:['Història','La Penya Barcelonista Sant Vicenç dels Horts es va fundar l’any 1978. Aquí incorporarem una cronologia amb els moments més importants, fotografies i records de l’entitat.'],
  board:['Junta directiva',''],
