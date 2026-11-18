@@ -396,29 +396,50 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script><script id="pbsv-club-data-script">
 (function(){
-function apply(sections){
- const root=document.getElementById('club');if(!root)return;
- const cards=root.querySelector('.club-grid');if(!cards)return;
- const byId=new Map(Array.from(cards.querySelectorAll('[data-detail]')).map(el=>[el.dataset.detail,el]));
- const selected=new Set();
+let sections=[];
+const translated={
+ history:{name:'Historia',content:'Nuestros orígenes, los momentos destacados y el camino desde 1978.'},
+ board:{name:'Junta directiva',content:'Las personas que representan y gestionan la entidad.'},
+ sports:{name:'Área deportiva',content:'Dirección, coordinación y apoyo deportivo del club.'},
+ honours:{name:'Palmarés',content:'Títulos, reconocimientos e hitos deportivos del club.'},
+ contact:{name:'Contacto e instalaciones',content:'Dónde estamos, cómo contactar con nosotros y cómo formar parte del club.'}
+};
+function localized(item,field){
+ const es=document.documentElement.lang==='es';
+ if(!es)return item[field]||'';
+ return item[field+'_es']||translated[item.id]?.[field]||item[field]||'';
+}
+function render(){
+ const root=document.getElementById('club'),cards=root?.querySelector('.club-grid');
+ if(!cards)return;
+ const byId=new Map([...cards.querySelectorAll('[data-detail]')].map(el=>[el.dataset.detail,el]));
  for(const item of sections){
   if(!item||typeof item.id!=='string'||typeof item.name!=='string')continue;
   let card=byId.get(item.id);
   if(!card){
    card=document.createElement('article');card.className='club-card';card.dataset.detail=item.id;
-   const h=document.createElement('h3');const p=document.createElement('p');card.append(h,p);
-   card.addEventListener('click',()=>showDetails(item));cards.append(card);
+   const h=document.createElement('h3'),p=document.createElement('p');card.append(h,p);cards.append(card);
+   card.addEventListener('click',()=>showDetails(item));
   }
-  const title=card.querySelector('h3');const summary=card.querySelector('p');
-  if(title)title.textContent=item.name;
-  if(summary&&typeof item.content==='string')summary.textContent=item.content;
-  if(item.url&&/^https:\/\//.test(item.url)){let a=card.querySelector('.pbsv-club-link');if(!a){a=document.createElement('a');a.className='pbsv-club-link';a.target='_blank';a.rel='noopener noreferrer';a.textContent='Més informació';card.append(a)}a.href=item.url;a.onclick=e=>e.stopPropagation()}
-  selected.add(item.id);
+  const title=card.querySelector('h3'),summary=card.querySelector('p');
+  if(title)title.textContent=localized(item,'name');
+  if(summary&&typeof item.content==='string')summary.textContent=localized(item,'content');
+  if(item.url&&/^https:\/\//.test(item.url)){
+   let link=card.querySelector('.pbsv-club-link');
+   if(!link){link=document.createElement('a');link.className='pbsv-club-link';link.target='_blank';link.rel='noopener noreferrer';card.append(link)}
+   link.textContent=document.documentElement.lang==='es'?'Más información':'Més informació';
+   link.href=item.url;link.onclick=e=>e.stopPropagation();
+  }
  }
- // Keep original cards visible: never silently delete built-in sections.
- function showDetails(item){const panel=document.getElementById('detailPanel'),title=document.getElementById('detailTitle'),body=document.getElementById('detailText');if(!panel||!title||!body)return;title.textContent=item.name;body.textContent=item.content||'';panel.classList.add('open');panel.scrollIntoView({behavior:'smooth',block:'nearest'})}
 }
-fetch('./data/club.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('club data unavailable');return r.json()}).then(d=>{if(Array.isArray(d.sections))apply(d.sections)}).catch(e=>console.warn('PBSV club:',e));
+function showDetails(item){
+ const panel=document.getElementById('detailPanel'),title=document.getElementById('detailTitle'),body=document.getElementById('detailText');
+ if(!panel||!title||!body)return;
+ title.textContent=localized(item,'name');body.textContent=localized(item,'detail')||localized(item,'content');
+ panel.classList.add('open');panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+document.addEventListener('pbsv:languagechange',render);
+fetch('./data/club.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('club data unavailable');return r.json()}).then(d=>{if(Array.isArray(d.sections)){sections=d.sections;render()}}).catch(e=>console.warn('PBSV club:',e));
 })();
 </script><script id="pbsv-bell-controller">(function(){const bell=document.getElementById('pbsvBell'),overlay=document.getElementById('pbsvAlertOverlay'),close=document.getElementById('pbsvAlertClose'),dialog=overlay.querySelector('.pbsv-alert-dialog');let previous=null;function toggle(open){overlay.classList.toggle('open',open);overlay.setAttribute('aria-hidden',String(!open));bell.setAttribute('aria-expanded',String(open));document.body.style.overflow=open?'hidden':'';if(open){previous=document.activeElement;dialog.focus()}else{(previous&&previous.isConnected?previous:bell).focus()}}bell.addEventListener('click',()=>toggle(true));close.addEventListener('click',()=>toggle(false));overlay.addEventListener('click',e=>{if(e.target===overlay)toggle(false)});document.addEventListener('keydown',e=>{if(!overlay.classList.contains('open'))return;if(e.key==='Escape')toggle(false);if(e.key==='Tab'){const controls=[...dialog.querySelectorAll('button,input,select,summary,a[href]')].filter(el=>el.getClientRects().length&&!el.disabled);if(!controls.length)return;const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}})})();</script><script id="pbsv-permission-reminder">(function(){
  const banner=document.getElementById('pbsvPermissionBanner'),activate=document.getElementById('pbsvPermissionActivate'),dismiss=document.getElementById('pbsvPermissionDismiss'),message=document.getElementById('pbsvPermissionText');
