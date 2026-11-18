@@ -74,7 +74,7 @@ body.pbsv-news-modal-open{overflow:hidden}
 
 /* PBSV: carrusel mobil compacte, sense alçada fixa ni espais buits. */
 @media(max-width:680px){
- #pbsv-news-carousel{padding:14px!important;margin:12px auto!important}
+ #pbsv-news-carousel{padding:14px!important;margin:4px auto 12px!important}
  #pbsv-news-carousel .pbsv-carousel-head h2{margin-bottom:10px!important}
  #pbsv-news-carousel .pbsv-carousel-stage{height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}
  #pbsv-news-carousel .pbsv-carousel-slide{height:auto!important;min-height:0!important;max-height:none!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:180px auto!important}
