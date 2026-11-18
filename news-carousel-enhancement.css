@@ -64,3 +64,10 @@ body.pbsv-news-modal-open{overflow:hidden}
 #pbsv-news-carousel .pbsv-carousel-next,
 .pbsv-news-modal-close{min-width:44px!important;min-height:44px!important}
 }
+
+/* PBSV: indicadors discrets sense reduir la zona tactil accessible. */
+#pbsv-news-carousel .pbsv-carousel-dots{gap:6px!important;align-items:center}
+#pbsv-news-carousel .pbsv-carousel-dots button{box-sizing:border-box!important;width:22px!important;min-width:22px!important;max-width:22px!important;height:28px!important;min-height:28px!important;max-height:28px!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;transform:none!important;display:grid!important;place-items:center!important}
+#pbsv-news-carousel .pbsv-carousel-dots button::after{content:'';display:block;width:7px;height:7px;border-radius:50%;background:#b9c7da;transition:background-color .15s ease,transform .15s ease}
+#pbsv-news-carousel .pbsv-carousel-dots button.active::after{background:#174b9d;transform:scale(1.25)}
+@media(hover:hover){#pbsv-news-carousel .pbsv-carousel-dots button:hover::after{background:#174b9d}}
