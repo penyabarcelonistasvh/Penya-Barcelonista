@@ -16,13 +16,15 @@ jobs:
           python3 scripts/generar-portada-optimizada.py
           python3 scripts/verificar-candidat-portada.py
       - name: Preparar branca aillada
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           BRANCH="optimitzacio/portada-imatges-externes"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+            echo "La branca de proposta ja existeix. No se sobreescriu."
+            exit 0
+          fi
           git switch -c "$BRANCH"
           cp dist/portada-optimitzada/index.html index.html
           mkdir -p assets/optimized
@@ -31,6 +33,4 @@ jobs:
           git diff --cached --check
           git commit -m "Optimitzar portada: externalitzar 11 imatges sense alterar contingut"
           git push --set-upstream origin "$BRANCH"
-          if ! gh pr list --head "$BRANCH" --base main --json number --jq '.[0].number' | grep -q '[0-9]'; then
-            gh pr create --base main --head "$BRANCH" --title "Optimitzar portada sense canvis funcionals" --body "Proposta no publicada automàticament. Redueix index.html de 4,43 MB a uns 78 KB, externalitza 11 imatges i conserva 15 referències. Les comprovacions de reconstrucció exacta i integritat s'han superat. Cal revisar la visualització abans de fusionar."
-          fi
+          echo "Branca creada. El Pull Request es gestiona separadament."
