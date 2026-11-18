@@ -50,3 +50,17 @@ body.pbsv-news-modal-open{overflow:hidden}
 #pbsv-news-carousel .pbsv-carousel-media{height:190px!important;max-height:190px!important}
 #pbsv-news-carousel .pbsv-carousel-copy{height:240px!important;max-height:240px!important}
 }
+
+/* PBSV: controls accessibles amb teclat i zones tactils comodes al mobil. */
+#pbsv-news-carousel .pbsv-carousel-prev:focus-visible,
+#pbsv-news-carousel .pbsv-carousel-next:focus-visible,
+#pbsv-news-carousel .pbsv-carousel-dots button:focus-visible,
+#pbsv-news-carousel .pbsv-carousel-read:focus-visible,
+#pbsv-news-carousel .pbsv-carousel-slide:focus-visible,
+.pbsv-news-modal-close:focus-visible{outline:3px solid #f2c51d!important;outline-offset:3px!important}
+@media(max-width:680px){
+#pbsv-news-carousel .pbsv-carousel-dots button{min-width:44px!important;min-height:44px!important}
+#pbsv-news-carousel .pbsv-carousel-prev,
+#pbsv-news-carousel .pbsv-carousel-next,
+.pbsv-news-modal-close{min-width:44px!important;min-height:44px!important}
+}
