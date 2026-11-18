@@ -35,7 +35,7 @@ jobs:
           p = Path("preview/portada-optimitzada")
           h = (p/"index.html").read_text()
           import re
-          refs = re.findall(r'assets/optimized/embedded-[0-9a-f]{16}\\.(?:jpg|png|webp|gif)', h)
+          refs = re.findall(r'assets/optimized/embedded-[0-9a-f]{16}[.](?:jpg|png|webp|gif)', h)
           assert len(refs) == 15, len(refs)
           assert all((p/ref).is_file() for ref in refs)
           print("OK: 15 referencies i 11 imatges disponibles")
