@@ -34,7 +34,7 @@ const dialog=modal.querySelector('.pbsv-news-modal-dialog');
 const modalBody=modal.querySelector('.pbsv-news-modal-body');
 function stop(){clearInterval(timer);timer=null}
 function allowedImage(src){return typeof src==='string'&&(/^(https:\/\/|\.\/|\.\.\/|assets\/|images\/|img\/|data:image\/(png|jpeg|webp);base64,)/i.test(src))}
-function image(src,cls){if(!allowedImage(src))return null;const el=document.createElement('img');el.src=src;el.alt='';el.loading=cls?'lazy':'eager';el.decoding='async';if(cls)el.className=cls;return el}
+function image(src,cls){if(!allowedImage(src))return null;const el=document.createElement('img');el.src=src;el.alt='';el.loading=cls?'lazy':'eager';el.decoding='async';if(!cls)el.fetchPriority='high';if(cls)el.className=cls;return el}
 function makeText(tag,value,cls){const el=document.createElement(tag);el.textContent=value||'';if(cls)el.className=cls;return el}
 function storyText(n){return n.contenido||n.contingut||n.texto||n.cos||n.descripcio||n.descripcion||n.resumen||''}
 function storyLink(n){const url=n.enlace||n.enllac||n.url;return typeof url==='string'&&/^https:\/\//i.test(url)?url:null}
