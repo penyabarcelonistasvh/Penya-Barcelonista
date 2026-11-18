@@ -254,6 +254,32 @@ function openClubTeam(name,group){
 function closeClubTeam(){const overlay=document.getElementById('teamOverlay');if(!overlay.classList.contains('open'))return;overlay.classList.remove('open');if(lastTeamFocus?.isConnected)lastTeamFocus.focus({preventScroll:true});lastTeamFocus=null}
 document.getElementById('teamClose').addEventListener('click',closeClubTeam);document.getElementById('teamOverlay').addEventListener('click',e=>{if(e.target.id==='teamOverlay')closeClubTeam()});document.addEventListener('keydown',e=>{const overlay=document.getElementById('teamOverlay');if(!overlay.classList.contains('open'))return;if(e.key==='Escape'){e.preventDefault();closeClubTeam()}if(e.key==='Tab'){const controls=[...overlay.querySelectorAll('button,a[href],input,select,[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.getClientRects().length);if(!controls.length)return;const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
 document.getElementById('teamFilters').addEventListener('click',e=>{const b=e.target.closest('[data-group]');if(!b)return;chosenGroup=b.dataset.group;document.querySelectorAll('.team-filter').forEach(x=>{const active=x===b;x.classList.toggle('selected',active);x.setAttribute('aria-pressed',String(active))});renderClubTeams()});
+/* Textos estàtics de seccions que abans no seguien el selector d'idioma. */
+const extraTranslations=[
+ ['#home .hero .eyebrow','Des de 1978 · Sant Vicenç dels Horts','Desde 1978 · Sant Vicenç dels Horts'],
+ ['#home .hero p','Benvinguts a la Penya Barcelonista Sant Vicenç dels Horts. Aquí trobaràs l\'actualitat, els nostres equips i tot el que dona vida al club.','Bienvenidos a la Penya Barcelonista Sant Vicenç dels Horts. Aquí encontrarás las noticias, nuestros equipos y todo lo que da vida al club.'],
+ ['#store .page-title .kicker','Vesteix els nostres colors','Viste nuestros colores'],
+ ['#store .page-title p','Tot el material i la roba oficial de la Penya, en un mateix lloc.','Todo el material y la ropa oficial de la Penya, en un mismo lugar.'],
+ ['#store .store-panel .eyebrow','Botiga oficial','Tienda oficial'],
+ ['#store .store-panel h2','Porta la Penya amb tu.','Lleva la Penya contigo.'],
+ ['#store .store-panel p','Consulta el catàleg de roba, equipacions i productes oficials del club.','Consulta el catálogo de ropa, equipaciones y productos oficiales del club.'],
+ ['#club .page-title .kicker','La nostra identitat','Nuestra identidad'],
+ ['#club .page-title p','Descobreix qui som, d\'on venim i les persones que fan possible la Penya Barcelonista Sant Vicenç dels Horts.','Descubre quiénes somos, de dónde venimos y las personas que hacen posible la Penya Barcelonista Sant Vicenç dels Horts.'],
+ ['#club [data-detail="history"] h3','Història','Historia'],
+ ['#club [data-detail="history"] p','Els nostres orígens, els moments destacats i el camí des de 1978.','Nuestros orígenes, los momentos destacados y el camino desde 1978.'],
+ ['#club [data-detail="board"] p','Les persones que representen i gestionen l\'entitat.','Las personas que representan y gestionan la entidad.'],
+ ['#club [data-detail="sports"] h3','Àrea esportiva','Área deportiva'],
+ ['#club [data-detail="sports"] p','Direcció, coordinació i suport esportiu del club.','Dirección, coordinación y apoyo deportivo del club.'],
+ ['#club [data-detail="honours"] h3','Palmarès','Palmarés'],
+ ['#club [data-detail="honours"] p','Títols, reconeixements i fites esportives del club.','Títulos, reconocimientos e hitos deportivos del club.'],
+ ['#club [data-detail="contact"] h3','Contacte i instal·lacions','Contacto e instalaciones'],
+ ['#club [data-detail="contact"] p','On som, com contactar amb nosaltres i com formar part del club.','Dónde estamos, cómo contactar con nosotros y cómo formar parte del club.'],
+ ['#home .quick-grid .quick:nth-child(2) h3','Botiga oficial','Tienda oficial'],
+ ['#home .quick-grid .quick:nth-child(2) p','Accés directe a la botiga i als productes del club.','Acceso directo a la tienda y a los productos del club.'],
+ ['#home .quick-grid .quick:nth-child(3) h3','La nostra història','Nuestra historia'],
+ ['#home .quick-grid .quick:nth-child(3) p','Una entitat amb orgull, valors i història des de 1978.','Una entidad con orgullo, valores e historia desde 1978.']
+];
+extraTranslations.forEach(([selector,ca,es])=>{const el=document.querySelector(selector);if(el){el.dataset.ca=ca;el.dataset.es=es}});
 const translations=[['Inici','Inicio'],['Equips','Equipos'],['Botiga','Tienda'],['El club','El club'],['Patrocinadors','Patrocinadores']];
 function applySiteLanguage(){document.documentElement.lang=siteLang;document.getElementById('langSwitch').textContent=siteLang==='ca'?'ES':'CAT';document.querySelectorAll('[data-ca][data-es]').forEach(el=>{el.textContent=el.dataset[siteLang]});nav.forEach((b,i)=>b.textContent=translations[i][siteLang==='ca'?0:1]);renderClubTeams();document.dispatchEvent(new CustomEvent('pbsv:languagechange',{detail:{language:siteLang}}))}
 document.getElementById('langSwitch').addEventListener('click',()=>{siteLang=siteLang==='ca'?'es':'ca';try{localStorage.setItem('pbsv-language',siteLang)}catch(_){}applySiteLanguage()});
