@@ -36,3 +36,19 @@ for index, match in enumerate(re.finditer(r'''data:image/[^\s"'<>)]{20,}''', htm
                 "atribut o contingut HTML")
     print(f"  {index:02d}. {len(uri):>10,} bytes | {mime[:40]:<18} | línia {line} | {location}")
 print("Cap imatge s'ha extret ni modificat.")
+
+# Detectar duplicats exactes amb hash, sense revelar contingut ni modificar recursos.
+import hashlib
+from collections import defaultdict
+groups = defaultdict(list)
+for index, match in enumerate(re.finditer(r'''data:image/[^\s"'<>)]{20,}''', html, re.I), 1):
+    uri = match.group()
+    groups[hashlib.sha256(uri.encode("utf-8")).hexdigest()].append((index, len(uri)))
+duplicates = [group for group in groups.values() if len(group) > 1]
+print("\nDuplicats exactes per SHA-256:")
+if not duplicates:
+    print("  Cap duplicat exacte detectat.")
+for group in duplicates:
+    indexes = ", ".join(f"{i:02d}" for i, _ in group)
+    print(f"  Imatges {indexes} | {group[0][1]:,} bytes cadascuna")
+print(f"Estalvi teòric de referenciar una sola còpia per grup: {sum((len(g)-1)*g[0][1] for g in duplicates):,} bytes")
