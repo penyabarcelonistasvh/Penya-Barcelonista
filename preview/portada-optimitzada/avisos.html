@@ -1,0 +1,114 @@
+<!doctype html><html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07152d"><meta name="description" content="Notificacions de partits i esdeveniments de la Penya Barcelonista"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./pbsv-icon.svg" type="image/svg+xml"><title>Avisos · Penya Barcelonista</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#07152d;color:#fff;font:16px system-ui,-apple-system,sans-serif;padding:22px 16px}main{max-width:520px;margin:0 auto}.back{color:#f2c51d;text-decoration:none;font-size:.94rem}header{text-align:center;padding:30px 0 12px}.bell{font-size:3.2rem}h1{font-size:1.7rem;line-height:1.2;margin:12px 0}header p{color:#c7d5eb;line-height:1.55}section{background:#12284a;border:1px solid #284365;padding:24px 20px;border-radius:20px;margin:20px 0}h2{font-size:1.2rem;margin:0 0 12px}p{line-height:1.5}.small,.footnote{font-size:.9rem;color:#c7d5eb}.footnote{text-align:center}.verification{margin:14px 0;max-width:100%;overflow:hidden}button{display:block;width:100%;border:0;border-radius:12px;padding:15px 18px;font:inherit;font-weight:750;cursor:pointer;margin:12px 0}button.primary{background:#f2c51d;color:#07152d;font-size:1.1rem}button.secondary{background:#284365;color:#fff}button.refresh{background:transparent;color:#c7d5eb;text-decoration:underline;font-size:.88rem;font-weight:500;padding:8px}button[hidden],div[hidden]{display:none!important}button:disabled{opacity:.6;cursor:wait}#pushServerStatus{font-size:.93rem;color:#d9e5f5;min-height:24px}
+</style></head><body><main>
+<a class="back" href="./index.html">← Tornar a la Penya</a>
+<header><div class="bell" aria-hidden="true">🔔</div><h1>Notificacions de la Penya</h1><p>Rep al mòbil els avisos de partits, notícies i esdeveniments importants.</p></header>
+<section class="push-card">
+<h2>Activa els avisos al teu mòbil</h2>
+<p id="pushCompatibility" role="status" class="small">Comprovant el dispositiu…</p>
+<div id="pushTurnstile" class="verification" hidden></div>
+<button id="subscribePush" class="primary" type="button" hidden>🔔 Activar notificacions</button>
+<button id="unsubscribePush" class="secondary" type="button" hidden>Desactivar notificacions</button>
+<div id="deviceCodeBox" hidden><p class="small">Codi d’aquest dispositiu per a proves privades. Copia’l al panell d’administració; no és una contrasenya.</p><input id="deviceCode" readonly aria-label="Codi de dispositiu" style="width:100%;padding:12px;border-radius:8px;font-size:12px" /><button id="copyDeviceCode" class="secondary" type="button">Copiar codi del meu mòbil</button></div><p id="pushServerStatus" role="status" aria-live="polite">Comprovant la subscripció…</p>
+<button id="checkPushServer" class="refresh" type="button">Tornar a comprovar l'estat</button>
+</section>
+<p class="footnote">És gratuït i pots desactivar els avisos quan vulguis. No cal registrar-se ni facilitar dades personals.</p>
+</main><script>
+(async()=>{
+ const el=document.getElementById('pushCompatibility');
+ const supported=isSecureContext&&'serviceWorker'in navigator&&'PushManager'in window&&'Notification'in window;
+ const ios=/iPad|iPhone|iPod/.test(navigator.userAgent);
+ const installed=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+ if(!supported){el.textContent='Aquest navegador encara no ofereix tots els requisits de Web Push.';return}
+ if(ios&&!installed){el.textContent='iPhone: instal·la la web a la pantalla d’inici des de Safari per activar les notificacions push.';return}
+ try{
+  const reg=await navigator.serviceWorker.getRegistration('./');
+  const sub=reg?await reg.pushManager.getSubscription():null;
+  el.textContent=sub?'Aquest dispositiu té una subscripció push al navegador. Comprova la connexió amb el servidor per verificar-ne l'estat.':'Dispositiu compatible amb Web Push. Prem «Comprovar connexió amb el servidor» per consultar l'estat actual.';
+ }catch{el.textContent='Dispositiu compatible. No s’ha pogut comprovar la subscripció actual.'}
+})();
+</script><script>
+const PUSH_API='https://pbsv-push.cristiangarciajura.workers.dev';
+const pushStatus=document.getElementById('pushServerStatus');
+const subscribeBtn=document.getElementById('subscribePush');
+const unsubscribeBtn=document.getElementById('unsubscribePush');
+let pushPublicKey=null,pushRegistration=null,pushEnabled=false,turnstileWidget=null,turnstileReady=null;
+async function deviceId(endpoint){const bytes=new TextEncoder().encode(endpoint);const digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+document.getElementById('copyDeviceCode').onclick=async()=>{const input=document.getElementById('deviceCode');try{await navigator.clipboard.writeText(input.value);pushStatus.textContent='Codi copiat. Enganxa’l al panell privat.'}catch{input.select();pushStatus.textContent='Selecciona i copia el codi manualment.'}};
+const turnstileBox=document.getElementById('pushTurnstile');
+function loadTurnstile(siteKey){
+ if(turnstileReady)return turnstileReady;
+ turnstileReady=new Promise((resolve,reject)=>{
+  const script=document.createElement('script');script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';script.async=true;
+  script.onload=()=>{try{turnstileBox.hidden=false;turnstileWidget=window.turnstile.render(turnstileBox,{sitekey:siteKey,theme:'dark'});resolve()}catch(e){reject(e)}};
+  script.onerror=()=>reject(Error('No s’ha pogut carregar la verificació de seguretat.'));document.head.append(script);
+ });return turnstileReady;
+}
+async function securityToken(){
+ if(!window.turnstile||turnstileWidget===null)return null;
+ const token=window.turnstile.getResponse(turnstileWidget);
+ if(!token)throw Error('Completa primer la verificació de seguretat.');
+ return token;
+}
+function resetSecurity(){if(window.turnstile&&turnstileWidget!==null)window.turnstile.reset(turnstileWidget)}
+function vapidBytes(encoded){
+ const padded=encoded.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-encoded.length%4)%4);
+ const decoded=atob(padded);return Uint8Array.from(decoded,c=>c.charCodeAt(0));
+}
+async function refreshPush(){
+ pushStatus.textContent='Comprovant el servei…';
+ subscribeBtn.hidden=true;unsubscribeBtn.hidden=true;document.getElementById('deviceCodeBox').hidden=true;
+ try{
+  const response=await fetch(PUSH_API+'/api/push/public-key',{mode:'cors',cache:'no-store'});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const data=await response.json();
+  if(typeof data.publicKey!=='string'||!data.publicKey)throw new Error('Clau pública no disponible');
+  pushPublicKey=data.publicKey;
+  pushEnabled=data.subscriptionsEnabled===true;
+  if(pushEnabled&&data.turnstileSiteKey)await loadTurnstile(data.turnstileSiteKey);
+  if(!pushEnabled){pushStatus.textContent='El servei de notificacions no està disponible temporalment. Torna-ho a provar més tard.';return}
+  if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){pushStatus.textContent='Aquest navegador no admet les notificacions push.';return}
+  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(ios&&!window.matchMedia('(display-mode: standalone)').matches&&navigator.standalone!==true){pushStatus.textContent='A iPhone: obre aquesta pàgina amb Safari, prem Compartir → Afegir a la pantalla d’inici i entra des de la icona creada.';return}
+  pushRegistration=await navigator.serviceWorker.register('./pbsv-sw.js',{scope:'./'});
+  const existing=await pushRegistration.pushManager.getSubscription();
+  if(existing){document.getElementById('deviceCode').value=await deviceId(existing.endpoint);document.getElementById('deviceCodeBox').hidden=false}
+  subscribeBtn.hidden=false;subscribeBtn.textContent=existing?'🔔 Confirmar notificacions':'🔔 Activar notificacions';unsubscribeBtn.hidden=!existing;
+  pushStatus.textContent=existing?'🔔 Les notificacions ja estan activades en aquest dispositiu. Pots confirmar el registre si vols.':'Prem «Activar notificacions» i accepta el permís del mòbil.';
+ }catch(e){pushStatus.textContent='No s’ha pogut verificar el servidor: '+e.message}
+}
+document.getElementById('checkPushServer').addEventListener('click',refreshPush);
+refreshPush();
+subscribeBtn.addEventListener('click',async()=>{
+ if(!pushEnabled||!pushPublicKey||!pushRegistration)return;
+ subscribeBtn.disabled=true;
+ try{
+  const token=await securityToken();
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted')throw Error('No has concedit el permís de notificacions.');
+  const existing=await pushRegistration.pushManager.getSubscription();
+  const sub=existing||await pushRegistration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidBytes(pushPublicKey)});
+  const response=await fetch(PUSH_API+'/api/push/subscriptions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...sub.toJSON(),turnstileToken:token})});
+  if(!response.ok){let details='';try{const err=await response.json();details=err.error||''}catch{}throw Error('El servidor no ha acceptat la subscripció (HTTP '+response.status+'). '+details)}
+  await refreshPush();
+  pushStatus.textContent='✅ Notificacions activades! Ja rebràs els avisos de la Penya.';
+ }catch(e){pushStatus.textContent='No s’ha pogut activar: '+e.message}
+ finally{resetSecurity();subscribeBtn.disabled=false}
+});
+unsubscribeBtn.addEventListener('click',async()=>{
+ if(!pushEnabled||!pushRegistration)return;
+ unsubscribeBtn.disabled=true;
+ try{
+  const sub=await pushRegistration.pushManager.getSubscription();
+  if(!sub)return refreshPush();
+  const token=await securityToken();
+  const auth=sub.toJSON().keys?.auth;
+  const response=await fetch(PUSH_API+'/api/push/subscriptions',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint,auth,turnstileToken:token})});
+  if(!response.ok)throw Error('No s’ha pogut cancel·lar la subscripció al servidor.');
+  await sub.unsubscribe();
+  await refreshPush();
+  pushStatus.textContent='Notificacions desactivades en aquest dispositiu.';
+ }catch(e){pushStatus.textContent='Error: '+e.message}
+ finally{resetSecurity();unsubscribeBtn.disabled=false}
+});
+</script></body></html>

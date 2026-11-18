@@ -1,0 +1,9 @@
+#home .quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#home .quick[data-quick-target]{cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}#home .quick[data-quick-target]:hover{transform:translateY(-3px);box-shadow:0 15px 32px #07152d20}#home .quick[data-quick-target]:focus-visible{outline:3px solid #0756a5;outline-offset:3px}@media(max-width:600px){#home .quick-grid{grid-template-columns:1fr}}
+/* Millores d'accessibilitat i interacció tàctil sense alterar la navegació. */
+#home .quick[data-quick-target]{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#home .quick[data-quick-target]:active{transform:scale(.985)}
+@media(hover:none){#home .quick[data-quick-target]:hover{transform:none;box-shadow:none}}
+@media(prefers-reduced-motion:reduce){#home .quick[data-quick-target]{transition:none}#home .quick[data-quick-target]:hover,#home .quick[data-quick-target]:active{transform:none}}
+
+/* Renderitzar les targetes de patrocinadors fora de pantalla només quan cal. */
+@supports(content-visibility:auto){#home #pbsvSponsorGrid .pbsv-sponsor-card{content-visibility:auto;contain-intrinsic-size:auto 180px}}
