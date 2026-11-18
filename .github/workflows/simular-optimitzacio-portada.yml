@@ -1,0 +1,16 @@
+name: Simular optimitzacio de portada
+on:
+  push:
+    paths:
+      - 'scripts/preparar-extraccion-imagenes.py'
+      - '.github/workflows/simular-optimitzacio-portada.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  simular:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar extraccio sense modificar fitxers
+        run: python3 scripts/preparar-extraccion-imagenes.py
