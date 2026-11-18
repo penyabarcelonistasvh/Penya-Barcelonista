@@ -9,7 +9,7 @@ if not html_path.is_file():
     raise SystemExit("No s'ha trobat index.html")
 html = html_path.read_text(encoding="utf-8")
 total = html_path.stat().st_size
-data_uris = re.findall(r"data:image/[^\s\\"'<>)]{20,}", html, re.I)
+data_uris = re.findall(r'''data:image/[^\s"'<>)]{20,}''', html, re.I)
 inline_scripts = re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, re.I | re.S)
 inline_styles = re.findall(r"<style\b[^>]*>(.*?)</style\s*>", html, re.I | re.S)
 sizes = {
