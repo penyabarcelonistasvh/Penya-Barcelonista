@@ -4,7 +4,7 @@
 async function updateSponsorImages(){
  const grid=document.getElementById('pbsvSponsorGrid');if(!grid)return;
  try{
-  const response=await fetch('./data/patrocinadors.json?v='+Date.now(),{cache:'no-store'});
+  const response=await fetch('./data/patrocinadors.json',{cache:'no-cache'});
   if(!response.ok)throw Error('No es poden carregar els patrocinadors');
   const data=await response.json();
   if(!Array.isArray(data.sponsors))return;
