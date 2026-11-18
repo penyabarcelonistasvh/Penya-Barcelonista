@@ -19,7 +19,7 @@ async function updateSponsorImages(){
    const body=document.createElement('div');body.className='pbsv-sponsor-content';
    const name=document.createElement('h3');name.textContent=s.name;
    body.append(name);
-   if(typeof s.url==='string'&&/^https:\/\//i.test(s.url)){const link=document.createElement('a');link.href=s.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Visitar ↗';body.append(link)}
+   if(typeof s.url==='string'&&/^https:\/\//i.test(s.url)){const link=document.createElement('a');link.href=s.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=document.documentElement.lang==='es'?'Visitar ↗':'Visita ↗';link.dataset.sponsorVisit='true';body.append(link)}
    card.append(logo,body);return card;
   });
   grid.replaceChildren(...cards);
@@ -144,4 +144,4 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 
 /* Mantenir els accessos rapids i la instal·lacio en l'idioma triat. */
-(()=>{'use strict';function translate(){const es=document.documentElement.lang==='es';const install=document.getElementById('pbsv-install-card');if(install){const title=install.querySelector('h3'),desc=install.querySelector('p');if(title)title.textContent=es?'📲 Instala la app':'📲 Instal·la l’app';if(desc&&!desc.dataset.installBusy)desc.textContent=es?'Lleva la Penya a tu móvil en un momento':'Porta la Penya al teu mòbil en un moment'}document.querySelectorAll('#home .quick[data-quick-target]').forEach(card=>{const title=card.querySelector('h3');if(title)card.setAttribute('aria-label',title.textContent.trim())})}document.addEventListener('pbsv:languagechange',translate);if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',translate,{once:true});else translate()})();
+(()=>{'use strict';function translate(){const es=document.documentElement.lang==='es';const install=document.getElementById('pbsv-install-card');if(install){const title=install.querySelector('h3'),desc=install.querySelector('p');if(title)title.textContent=es?'📲 Instala la app':'📲 Instal·la l’app';if(desc&&!desc.dataset.installBusy)desc.textContent=es?'Lleva la Penya a tu móvil en un momento':'Porta la Penya al teu mòbil en un moment'}document.querySelectorAll('#home .quick[data-quick-target]').forEach(card=>{const title=card.querySelector('h3');if(title)card.setAttribute('aria-label',title.textContent.trim())})}document.addEventListener('pbsv:languagechange',translate);document.addEventListener('pbsv:languagechange',()=>{const es=document.documentElement.lang==='es';document.querySelectorAll('[data-sponsor-visit]').forEach(link=>link.textContent=es?'Visitar ↗':'Visita ↗')});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',translate,{once:true});else translate()})();
