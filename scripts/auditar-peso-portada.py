@@ -59,7 +59,7 @@ for index, match in enumerate(re.finditer(r'''data:image/[^\s"'<>)]{20,}''', htm
     prefix = html[max(0, match.start()-500):match.start()]
     tag_start = prefix.rfind("<")
     fragment = prefix[tag_start:] if tag_start >= 0 else ""
-    tag_match = re.match(r"<([a-z][a-z0-9-]*)\\b", fragment, re.I)
+    tag_match = re.match(r"<([a-z][a-z0-9-]*)\b", fragment, re.I)
     tag = tag_match.group(1).lower() if tag_match else "desconeguda"
     attr_match = re.search(r"""([:\w-]+)\s*=\s*['"][^'"]*$""", fragment)
     attr = attr_match.group(1) if attr_match else "desconegut"
