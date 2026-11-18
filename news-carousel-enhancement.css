@@ -71,3 +71,22 @@ body.pbsv-news-modal-open{overflow:hidden}
 #pbsv-news-carousel .pbsv-carousel-dots button::after{content:'';display:block;width:7px;height:7px;border-radius:50%;background:#b9c7da;transition:background-color .15s ease,transform .15s ease}
 #pbsv-news-carousel .pbsv-carousel-dots button.active::after{background:#174b9d;transform:scale(1.25)}
 @media(hover:hover){#pbsv-news-carousel .pbsv-carousel-dots button:hover::after{background:#174b9d}}
+
+/* PBSV: carrusel mobil compacte, sense alçada fixa ni espais buits. */
+@media(max-width:680px){
+ #pbsv-news-carousel{padding:14px!important;margin:12px auto!important}
+ #pbsv-news-carousel .pbsv-carousel-head h2{margin-bottom:10px!important}
+ #pbsv-news-carousel .pbsv-carousel-stage{height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important}
+ #pbsv-news-carousel .pbsv-carousel-slide{height:auto!important;min-height:0!important;max-height:none!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:180px auto!important}
+ #pbsv-news-carousel .pbsv-carousel-media{height:180px!important;min-height:0!important;max-height:180px!important}
+ #pbsv-news-carousel .pbsv-carousel-copy{height:auto!important;min-height:0!important;max-height:none!important;justify-content:flex-start!important;gap:7px!important;padding:13px 14px 15px!important;overflow:visible!important}
+ #pbsv-news-carousel .pbsv-carousel-copy h3{margin:0!important}
+ #pbsv-news-carousel .pbsv-carousel-copy p{margin:0!important}
+ #pbsv-news-carousel .pbsv-carousel-read{margin-top:3px!important}
+ #pbsv-news-carousel .pbsv-carousel-nav{margin-top:9px!important}
+ #pbsv-news-carousel .pbsv-carousel-nav .pbsv-carousel-prev,
+ #pbsv-news-carousel .pbsv-carousel-nav .pbsv-carousel-next{position:relative!important;width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;margin-left:2px!important;border:0!important;background:transparent!important;isolation:isolate!important;font-size:20px!important}
+ #pbsv-news-carousel .pbsv-carousel-nav .pbsv-carousel-prev::before,
+ #pbsv-news-carousel .pbsv-carousel-nav .pbsv-carousel-next::before{content:'';position:absolute;z-index:-1;inset:5px;border:1px solid #d7e1ee;border-radius:50%;background:#f3f6fb}
+ #pbsv-news-carousel .pbsv-carousel-progress{margin-top:8px!important}
+}
