@@ -43,13 +43,32 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initBell,{once:true});else initBell();
 })();
 
-/* Accés discret a la instal·lació, sense alterar la navegació existent. */
-(()=>{'use strict';function initInstall(){
- if(window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)return;
- const grid=document.querySelector('#home .quick-grid');if(!grid||document.getElementById('pbsv-install-card'))return;
- const link=document.createElement('a');link.id='pbsv-install-card';link.href=new URL('./installar.html',document.baseURI).href;link.className='quick';link.style.cssText='display:block;text-decoration:none;color:inherit;cursor:pointer';
- const h=document.createElement('h3');h.textContent='📲 Instal·la l’app';const p=document.createElement('p');p.textContent='Porta la Penya al teu mòbil en un moment';link.append(h,p);grid.append(link);
- }if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initInstall,{once:true});else initInstall();})();
+/* Instal·lacio directa quan el navegador ofereix el prompt natiu. */
+(()=>{'use strict';
+ let pending=null;
+ const installed=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+ function initInstall(){
+  if(installed())return;
+  const grid=document.querySelector('#home .quick-grid');if(!grid)return;
+  let card=document.getElementById('pbsv-install-card');
+  if(!card){card=document.createElement('a');card.id='pbsv-install-card';card.href=new URL('./installar.html',document.baseURI).href;card.className='quick';card.style.cssText='display:block;text-decoration:none;color:inherit;cursor:pointer';const h=document.createElement('h3');h.textContent='📲 Instal·la l’app';const p=document.createElement('p');p.textContent='Porta la Penya al teu mòbil en un moment';card.append(h,p);grid.append(card)}
+  const label=card.querySelector('p');
+  if(pending&&label)label.textContent='Toca aquí per instal·lar directament';
+  card.onclick=async e=>{
+   if(!pending)return;
+   e.preventDefault();const prompt=pending;pending=null;
+   if(label)label.textContent='Preparant la instal·lació…';
+   try{await prompt.prompt();const choice=await prompt.userChoice;
+    if(choice?.outcome==='accepted'){card.remove();return}
+   }catch(err){console.warn('Instal·lació PBSV:',err)}
+   if(label)label.textContent='Consulta com instal·lar-la al teu mòbil';
+   window.location.assign(card.href);
+  };
+ }
+ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pending=e;initInstall()});
+ window.addEventListener('appinstalled',()=>{pending=null;document.getElementById('pbsv-install-card')?.remove()});
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initInstall,{once:true});else initInstall();
+})();
 
 /* Retirar l'avís fix de la jornada del 7–8 de novembre, sense tocar els partits. */
 (()=>{'use strict';
