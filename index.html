@@ -110,6 +110,22 @@ footer{background:#061126;color:#d6dfed;padding:30px 22px}.footer-inner{max-widt
 
 .results-tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0}.results-search-label{font-size:12px;font-weight:750}.results-tools input{border:1px solid #d9e3ef;background:white;border-radius:10px;padding:10px 12px;font:inherit;font-size:13px;min-width:150px;flex:1;max-width:340px}.results-favorites-section{margin:18px 0 26px;padding:16px;background:#edf3fb;border-radius:16px}.results-favorites-section h2{font-size:17px;margin:0 0 5px}.results-favorites-section p{font-size:12px;color:#68748a;margin:0 0 14px}.results-next-matches{font-size:12px;margin-top:12px;color:#10264b}.results-next-matches a{color:#0756a5;text-decoration:underline;font-weight:750}.results-star{border:1px solid #d9e3ef;background:#fff;color:#8b6d0d;border-radius:9px;min-width:36px;min-height:38px;font-size:21px;cursor:pointer}.results-star[aria-pressed="true"]{background:#fff7d9;color:#987000}.results-card{gap:8px}.results-card>div:first-child{flex:1;min-width:0}.results-card-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}@media(max-width:520px){.results-favorites-section{padding:12px}.results-tools input{max-width:none}}
 .results-match{margin-top:10px;padding:9px 10px;background:#f1f6fc;border-left:3px solid #0756a5;border-radius:7px;font-size:12px;line-height:1.5;color:#10264b}.results-match strong{display:block;font-size:11px;margin-bottom:3px;color:#0756a5}.results-match small{margin-top:2px}
+
+/* Targetes compactes: prioritzar la informació i els equips visibles en mòbil. */
+.results-grid{gap:8px}
+.results-card{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:5px;padding:11px 12px;border-radius:12px}
+.results-card>div:first-child{width:100%}
+.results-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.results-title-row h3{margin:0;font-size:14px;line-height:1.25}
+.results-title-row .results-star{min-width:30px;width:30px;min-height:30px;height:30px;border-radius:7px;font-size:19px;line-height:1;padding:0;flex:0 0 auto}
+.results-card>div:first-child>small{font-size:10px;margin-top:2px}
+.results-match{margin-top:6px;padding:7px 9px;font-size:11px;line-height:1.35;border-left-width:3px}
+.results-match strong{font-size:10px;margin-bottom:1px}
+.results-match small{font-size:10px;margin-top:1px}
+.results-card-actions{justify-content:flex-end;gap:5px}
+.results-card-actions a{min-height:30px;padding:6px 10px;font-size:10px}
+.results-card .results-pending{font-size:10px}
+@media(max-width:520px){.results-grid{gap:8px}.results-card{padding:10px 12px}.results-match{margin-top:5px}}
 </style><link rel="stylesheet" href="./news-carousel-enhancement.css?v=20261113-mobile3"><link rel="stylesheet" href="./weekend-matches.css?v=20261113-mobile3"><link rel="stylesheet" href="./home-quick-links.css?v=20261113-mobile3"></head>
 <body>
 <header>
@@ -479,4 +495,4 @@ fetch('./data/club.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('club
  window.addEventListener('focus',update);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
  update();
-})();</script><script src="./news-carousel-enhancement.js?v=20261113-mobile3" defer></script><script src="./weekend-matches.js?v=20261113-mobile3" defer></script><script src="./home-quick-links.js?v=20261119-i18n1" defer></script><script src="./directe-cap-setmana-link.js?v=20261113-beta1" defer></script><script src="./results-standings.js?v=20261119-3" defer></script></body></html>
+})();</script><script src="./news-carousel-enhancement.js?v=20261113-mobile3" defer></script><script src="./weekend-matches.js?v=20261113-mobile3" defer></script><script src="./home-quick-links.js?v=20261119-i18n1" defer></script><script src="./directe-cap-setmana-link.js?v=20261113-beta1" defer></script><script src="./results-standings.js?v=20261119-4" defer></script></body></html>
