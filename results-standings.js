@@ -17,7 +17,7 @@ function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(favorites))}
 function toggle(name){favorites=favorites.includes(name)?favorites.filter(x=>x!==name):[...favorites,name];save();render()}
 function futureMatch(team){
  const now=new Date();
- return matches.filter(m=>m.team===team.name&&/^\\d{4}-\\d{2}-\\d{2}$/.test(m.date)&&/^\\d{2}:\\d{2}$/.test(m.time)&&new Date(m.date+'T23:59:59').getTime()>=now.getTime()).sort((a,b)=>(a.date+'T'+a.time).localeCompare(b.date+'T'+b.time))[0]||null;
+ return matches.filter(m=>m.team===team.name&&/^\d{4}-\d{2}-\d{2}$/.test(m.date)&&/^\d{2}:\d{2}$/.test(m.time)&&new Date(m.date+'T23:59:59').getTime()>=now.getTime()).sort((a,b)=>(a.date+'T'+a.time).localeCompare(b.date+'T'+b.time))[0]||null;
 }
 function matchInfo(team){
  const match=futureMatch(team);if(!match)return null;
