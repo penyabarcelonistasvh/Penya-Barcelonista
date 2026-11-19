@@ -34,7 +34,7 @@ function cardFor(team){
  const card=document.createElement('article');card.className='results-card';
  const info=document.createElement('div'),heading=document.createElement('h3'),group=document.createElement('small'),titleRow=document.createElement('div');titleRow.className='results-title-row';
  heading.textContent=team.name;group.textContent=(groupNames[team.category]||[team.category||'',team.category||''])[es()?1:0];
- titleRow.append(heading);info.append(titleRow,group);const fixture=matchInfo(team);if(fixture)info.append(fixture);card.append(info);
+ titleRow.append(heading,group);info.append(titleRow);const fixture=matchInfo(team);if(fixture)info.append(fixture);card.append(info);
  const actions=document.createElement('div');actions.className='results-card-actions';
  const star=document.createElement('button');star.type='button';star.className='results-star';
  const active=favorites.includes(team.name);star.textContent=active?'★':'☆';star.setAttribute('aria-pressed',String(active));
