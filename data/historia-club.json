@@ -1,0 +1,92 @@
+{
+  "chapters": [
+    {
+      "year": "1978",
+      "title": "Els orígens",
+      "title_es": "Los orígenes",
+      "ca": "El 14 de febrer de 1978 neix la Penya Barcelonista Sant Vicenç dels Horts, fruit de la iniciativa d'un grup d'aficionats al Barça que volien compartir la seva passió i impulsar el futbol al municipi. Les primeres trobades, vinculades al bar Nitu, van donar forma a un projecte esportiu i social amb vocació de futur.",
+      "es": "El 14 de febrero de 1978 nace la Penya Barcelonista Sant Vicenç dels Horts, fruto de la iniciativa de un grupo de aficionados al Barça que querían compartir su pasión e impulsar el fútbol en el municipio. Las primeras reuniones, vinculadas al bar Nitu, dieron forma a un proyecto deportivo y social con vocación de futuro."
+    },
+    {
+      "year": "1989",
+      "title": "Un camí amb dificultats",
+      "title_es": "Un camino con dificultades",
+      "ca": "La Penya va viure moments complicats. El 1989, les dificultats econòmiques van obligar a interrompre l'activitat de futbol formatiu. Tot i això, el vincle amb l'entitat i la voluntat de continuar van mantenir viu el projecte.",
+      "es": "La Penya vivió momentos complicados. En 1989, las dificultades económicas obligaron a interrumpir la actividad de fútbol formativo. Aun así, el vínculo con la entidad y la voluntad de continuar mantuvieron vivo el proyecto."
+    },
+    {
+      "year": "1996–1997",
+      "title": "La recuperació del futbol base",
+      "title_es": "La recuperación del fútbol base",
+      "ca": "La temporada 1996-1997 marca la recuperació del futbol base gràcies a l'empenta de persones compromeses amb el club. La Penya reprèn la seva tasca formativa i obre una nova etapa per a infants, joves i famílies de Sant Vicenç dels Horts.",
+      "es": "La temporada 1996-1997 marca la recuperación del fútbol base gracias al impulso de personas comprometidas con el club. La Penya retoma su labor formativa y abre una nueva etapa para niños, jóvenes y familias de Sant Vicenç dels Horts."
+    },
+    {
+      "year": "2018",
+      "title": "Quaranta anys d'història",
+      "title_es": "Cuarenta años de historia",
+      "ca": "El 2018, l'entitat celebra el 40è aniversari i reconeix la dedicació de les persones que en van fer possible els inicis. Quatre dècades d'esforç compartit, entrenaments, partits i records que formen part de la vida esportiva del poble.",
+      "es": "En 2018, la entidad celebra el 40.º aniversario y reconoce la dedicación de las personas que hicieron posibles sus inicios. Cuatro décadas de esfuerzo compartido, entrenamientos, partidos y recuerdos que forman parte de la vida deportiva del municipio."
+    },
+    {
+      "year": "2021–2022",
+      "title": "El futbol és de tothom",
+      "title_es": "El fútbol es de todos",
+      "ca": "La Penya impulsa el futbol inclusiu amb la Fundació Iris i els equips Genuí. Amb el lema «Jo també hi jugo!», el projecte defensa que el futbol sigui un espai de participació, respecte i oportunitats per a tothom.",
+      "es": "La Penya impulsa el fútbol inclusivo con la Fundació Iris y los equipos Genuí. Bajo el lema «¡Yo también juego!», el proyecto defiende que el fútbol sea un espacio de participación, respeto y oportunidades para todos."
+    },
+    {
+      "year": "2026–2027",
+      "title": "La Penya d'avui",
+      "title_es": "La Penya de hoy",
+      "ca": "La Penya continua mirant endavant amb el futbol formatiu, els equips masculins i femenins i les iniciatives inclusives. La nova aplicació del club acosta les notícies, els partits i la vida de l'entitat a jugadors, jugadores, famílies i socis.",
+      "es": "La Penya sigue mirando al futuro con el fútbol formativo, los equipos masculinos y femeninos y las iniciativas inclusivas. La nueva aplicación del club acerca las noticias, los partidos y la vida de la entidad a jugadores, jugadoras, familias y socios."
+    }
+  ],
+  "values": {
+    "ca": [
+      [
+        "Respecte",
+        "Aprenem a conviure i a competir amb esportivitat."
+      ],
+      [
+        "Companyonia",
+        "Creixem com a equip, dins i fora del camp."
+      ],
+      [
+        "Esforç",
+        "Valorem la constància i la superació personal."
+      ],
+      [
+        "Inclusió",
+        "Volem un futbol on tothom tingui el seu lloc."
+      ],
+      [
+        "Arrelament",
+        "Som part de Sant Vicenç dels Horts i de la seva gent."
+      ]
+    ],
+    "es": [
+      [
+        "Respeto",
+        "Aprendemos a convivir y competir con deportividad."
+      ],
+      [
+        "Compañerismo",
+        "Crecemos como equipo, dentro y fuera del campo."
+      ],
+      [
+        "Esfuerzo",
+        "Valoramos la constancia y la superación personal."
+      ],
+      [
+        "Inclusión",
+        "Queremos un fútbol donde todo el mundo tenga su lugar."
+      ],
+      [
+        "Arraigo",
+        "Formamos parte de Sant Vicenç dels Horts y de su gente."
+      ]
+    ]
+  }
+}
