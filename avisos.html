@@ -9,7 +9,7 @@
 <div id="pushTurnstile" class="verification" hidden></div>
 <button id="subscribePush" class="primary" type="button" hidden>🔔 Activar notificacions</button>
 <button id="unsubscribePush" class="secondary" type="button" hidden>Desactivar notificacions</button>
-<div id="deviceCodeBox" hidden><p class="small">Codi d’aquest dispositiu per a proves privades. Copia’l al panell d’administració; no és una contrasenya.</p><input id="deviceCode" readonly aria-label="Codi de dispositiu" style="width:100%;padding:12px;border-radius:8px;font-size:12px" /><button id="copyDeviceCode" class="secondary" type="button">Copiar codi del meu mòbil</button></div><p id="pushServerStatus" role="status" aria-live="polite">Comprovant la subscripció…</p>
+<p id="pushServerStatus" role="status" aria-live="polite">Comprovant la subscripció…</p>
 <button id="checkPushServer" class="refresh" type="button">Tornar a comprovar l'estat</button>
 </section>
 <p class="footnote">És gratuït i pots desactivar els avisos quan vulguis. No cal registrar-se ni facilitar dades personals.</p>
@@ -33,8 +33,6 @@ const pushStatus=document.getElementById('pushServerStatus');
 const subscribeBtn=document.getElementById('subscribePush');
 const unsubscribeBtn=document.getElementById('unsubscribePush');
 let pushPublicKey=null,pushRegistration=null,pushEnabled=false,turnstileWidget=null,turnstileReady=null;
-async function deviceId(endpoint){const bytes=new TextEncoder().encode(endpoint);const digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('')}
-document.getElementById('copyDeviceCode').onclick=async()=>{const input=document.getElementById('deviceCode');try{await navigator.clipboard.writeText(input.value);pushStatus.textContent='Codi copiat. Enganxa’l al panell privat.'}catch{input.select();pushStatus.textContent='Selecciona i copia el codi manualment.'}};
 const turnstileBox=document.getElementById('pushTurnstile');
 function loadTurnstile(siteKey){
  if(turnstileReady)return turnstileReady;
@@ -57,7 +55,7 @@ function vapidBytes(encoded){
 }
 async function refreshPush(){
  pushStatus.textContent='Comprovant el servei…';
- subscribeBtn.hidden=true;unsubscribeBtn.hidden=true;document.getElementById('deviceCodeBox').hidden=true;
+ subscribeBtn.hidden=true;unsubscribeBtn.hidden=true;
  try{
   const response=await fetch(PUSH_API+'/api/push/public-key',{mode:'cors',cache:'no-store'});
   if(!response.ok)throw new Error('HTTP '+response.status);
@@ -72,7 +70,7 @@ async function refreshPush(){
   if(ios&&!window.matchMedia('(display-mode: standalone)').matches&&navigator.standalone!==true){pushStatus.textContent='A iPhone: obre aquesta pàgina amb Safari, prem Compartir → Afegir a la pantalla d’inici i entra des de la icona creada.';return}
   pushRegistration=await navigator.serviceWorker.register('./pbsv-sw.js',{scope:'./'});
   const existing=await pushRegistration.pushManager.getSubscription();
-  if(existing){document.getElementById('deviceCode').value=await deviceId(existing.endpoint);document.getElementById('deviceCodeBox').hidden=false}
+  
   subscribeBtn.hidden=false;subscribeBtn.textContent=existing?'🔔 Confirmar notificacions':'🔔 Activar notificacions';unsubscribeBtn.hidden=!existing;
   pushStatus.textContent=existing?'🔔 Les notificacions ja estan activades en aquest dispositiu. Pots confirmar el registre si vols.':'Prem «Activar notificacions» i accepta el permís del mòbil.';
  }catch(e){pushStatus.textContent='No s’ha pogut verificar el servidor: '+e.message}
