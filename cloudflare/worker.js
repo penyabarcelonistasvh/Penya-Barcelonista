@@ -1,7 +1,7 @@
 const OWNER='penyabarcelonistasvh', REPO='Penya-Barcelonista';
 const ADMIN_LOGIN='cristiangarciajura';
 const SITE='https://penyabarcelonistasvh.github.io/Penya-Barcelonista/';
-const ALLOWED=new Set(['equips.json','club.json','noticies.json','patrocinadors.json','partits-cap-setmana.json']);
+const ALLOWED=new Set(['equips.json','club.json','noticies.json','patrocinadors.json','partits-cap-setmana.json','proxims-partits.json']);
 const encoder=new TextEncoder();
 function cookies(req){return Object.fromEntries((req.headers.get('Cookie')||'').split(';').map(x=>x.trim()).filter(Boolean).map(x=>{const i=x.indexOf('=');return [x.slice(0,i),x.slice(i+1)]}))}
 function respond(body,status=200,headers={}){return new Response(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}})}
@@ -125,7 +125,7 @@ export default {async fetch(req,env){
   let payload;try{payload=await req.json()}catch{return respond('JSON incorrecte.',400)}
   const file=payload?.file,content=payload?.content;
   if(!ALLOWED.has(file)||typeof content!=='string'||content.length>1500000)return respond('Dades no permeses.',400);
-  try{const parsed=JSON.parse(content);const collections={'equips.json':'teams','club.json':'sections','noticies.json':'noticias','patrocinadors.json':'sponsors'};if(file==='partits-cap-setmana.json' ? !(parsed.saturday&&typeof parsed.saturday==='object'&&parsed.sunday&&typeof parsed.sunday==='object') : !Array.isArray(parsed[collections[file]]))return respond('Format de dades incorrecte.',400)}catch{return respond('JSON incorrecte.',400)}
+  try{const parsed=JSON.parse(content);const collections={'equips.json':'teams','club.json':'sections','noticies.json':'noticias','patrocinadors.json':'sponsors'};if(file==='partits-cap-setmana.json' ? !(parsed.saturday&&typeof parsed.saturday==='object'&&parsed.sunday&&typeof parsed.sunday==='object') : file==='proxims-partits.json' ? !(Array.isArray(parsed.matches)&&parsed.matches.every(m=>m&&typeof m.team==='string'&&typeof m.date==='string'&&typeof m.time==='string'&&typeof m.opponent==='string'&&typeof m.venue==='string'&&typeof m.home==='boolean')) : !Array.isArray(parsed[collections[file]]))return respond('Format de dades incorrecte.',400)}catch{return respond('JSON incorrecte.',400)}
   const user=await github('/user',s.token);if(!user.ok)return respond('Sessió GitHub caducada.',401);
   const identity=await user.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return respond('Accés denegat.',403);
   const api='/repos/'+OWNER+'/'+REPO+'/contents/data/'+file;
