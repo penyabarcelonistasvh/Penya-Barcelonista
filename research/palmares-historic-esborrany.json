@@ -106,5 +106,19 @@
       "name": "Consulta de documentació a l'Arxiu Municipal",
       "url": "https://svh.cat/tramita/tramits/consulta-de-documentacio-a-larxiu-municipal/"
     }
+  ],
+  "source_checks": [
+    {
+      "date": "2026-11-19",
+      "source": "https://svh.cat/wp-content/uploads/2021/07/SVH_45-Juliol-Agost-2021.pdf",
+      "page": 29,
+      "result": "Confirma explícitament que el Juvenil B de la Penya va ser campió de Segona Divisió i va ascendir a Primera. A la mateixa pàgina, l'ascens de l'Amateur B a Tercera Catalana correspon a la UE Sant Vicenç, NO a la Penya.",
+      "status": "verified"
+    },
+    {
+      "date": "2026-11-19",
+      "result": "Cerques web dirigides a títols/ascensos 2010-2020 a svh.cat sense noves evidències concloents; no afegir campionats sense document.",
+      "status": "no_new_verified_titles"
+    }
   ]
 }
