@@ -32,14 +32,14 @@ function matchInfo(team){
 }
 function cardFor(team){
  const card=document.createElement('article');card.className='results-card';
- const info=document.createElement('div'),heading=document.createElement('h3'),group=document.createElement('small');
+ const info=document.createElement('div'),heading=document.createElement('h3'),group=document.createElement('small'),titleRow=document.createElement('div');titleRow.className='results-title-row';
  heading.textContent=team.name;group.textContent=(groupNames[team.category]||[team.category||'',team.category||''])[es()?1:0];
- info.append(heading,group);const fixture=matchInfo(team);if(fixture)info.append(fixture);card.append(info);
+ titleRow.append(heading);info.append(titleRow,group);const fixture=matchInfo(team);if(fixture)info.append(fixture);card.append(info);
  const actions=document.createElement('div');actions.className='results-card-actions';
  const star=document.createElement('button');star.type='button';star.className='results-star';
  const active=favorites.includes(team.name);star.textContent=active?'★':'☆';star.setAttribute('aria-pressed',String(active));
  star.setAttribute('aria-label',(active?tr('Treure dels favorits: ','Quitar de favoritos: '):tr('Afegir als favorits: ','Añadir a favoritos: '))+team.name);
- star.title=star.getAttribute('aria-label');star.addEventListener('click',()=>toggle(team.name));actions.append(star);
+ star.title=star.getAttribute('aria-label');star.addEventListener('click',()=>toggle(team.name));titleRow.append(star);
  if(validUrl(team.url)){
   const link=document.createElement('a');link.href=team.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=tr('Veure FCF ↗','Ver FCF ↗');
   link.setAttribute('aria-label',tr('Consultar resultats i classificació de ','Consultar resultados y clasificación de ')+team.name+' (FCF)');
