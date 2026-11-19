@@ -1,0 +1,92 @@
+{
+  "status": "esborrany_no_publicat",
+  "updated": "2026-11-19",
+  "note": "Recerca per al futur mòdul Palmarès. No presentar reconeixements municipals com a campionats sense confirmar competició.",
+  "previously_identified": [
+    {
+      "season": "2012-13",
+      "team": "Equip B",
+      "achievement": "Campió Quarta Catalana grup 13",
+      "verification": "revisar denominació històrica"
+    },
+    {
+      "season": "2018-19",
+      "team": "Amateur masculí",
+      "achievement": "Campió Quarta Catalana grup 8 i ascens"
+    },
+    {
+      "season": "2020-21",
+      "team": "Juvenil B",
+      "achievement": "Campió Segona Divisió juvenil i ascens a Primera",
+      "source": "https://svh.cat/wp-content/uploads/2021/07/SVH_45-Juliol-Agost-2021.pdf"
+    },
+    {
+      "season": "2022",
+      "team": "Genuí",
+      "achievement": "Campió 9è Torneig de Futbol Special",
+      "verification": "revisar font del torneig"
+    },
+    {
+      "season": "2024-25",
+      "team": "Amateur femení A",
+      "achievement": "Campió Segona Divisió femenina grup 6 i ascens"
+    },
+    {
+      "season": "2024-25",
+      "team": "Infantil femení A",
+      "achievement": "Campió Segona Divisió femenina grup 16 i ascens"
+    },
+    {
+      "season": "2024-25",
+      "team": "Benjamí S10 B",
+      "achievement": "Campió Tercera Divisió benjamí S10 grup 15; ascens pendent"
+    },
+    {
+      "season": "2025-26",
+      "team": "Infantil S13 A",
+      "achievement": "Campió Segona Divisió infantil S13 grup 17, invicte i ascens"
+    },
+    {
+      "season": "2024-25",
+      "team": "Aleví S11 A",
+      "achievement": "Subcampió Segona Divisió, posteriorment Primera; revisar ascens"
+    }
+  ],
+  "new_findings": [
+    {
+      "year": 2024,
+      "team": "Genuí",
+      "achievement": "Campió Barcelona Cup; victòria als penals davant Cornellà a Cervelló",
+      "type": "torneig",
+      "source": "https://svh.cat/wp-content/uploads/2024/03/SVH_56_Gener_Marc_2024.pdf"
+    },
+    {
+      "year": 2021,
+      "team": "Penya Barcelonista Sant Vicenç",
+      "achievement": "Reconeixement municipal dins Equips guanyadors; no identifica categoria",
+      "type": "reconeixement",
+      "source": "https://svh.cat/actualitat/noticies/la-festa-de-lesport-vicenti-reconeix-el-talent-i-lesforc-desportistes-i-entitats/"
+    },
+    {
+      "year": 2022,
+      "team": "Penya Barcelonista i Genuïns",
+      "achievement": "Reconeixement municipal Equips guanyadors; trajectòria esportiva Antonio García Sánchez",
+      "type": "reconeixement",
+      "source": "https://svh.cat/actualitat/noticies/guardons-i-imatges-de-la-11a-festa-de-lesport-vicenti/"
+    },
+    {
+      "year": 2023,
+      "team": "Genuïns, Aleví masculí, Cadet femení",
+      "achievement": "Reconeixement Festa de l'Esport Vicentí",
+      "type": "reconeixement",
+      "source": "https://svh.cat/actualitat/noticies/recull-fotografic-de-la-12a-festa-de-lesport-vicenti/"
+    },
+    {
+      "year": 2025,
+      "team": "Benjamí S10, Infantil femení, Sènior femení, Genuïns Groc",
+      "achievement": "Reconeixement Festa de l'Esport Vicentí",
+      "type": "reconeixement",
+      "source": "https://svh.cat/actualitat/noticies/recull-fotografic-de-la-14a-festa-de-lesport-vicenti/"
+    }
+  ]
+}
