@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "source": "Cartells oficials de partits 21 i 22 de novembre de 2026, publicats a data/club.json (pbsv-weekend-matches)",
+  "note": "Dades transcrites i verificades visualment. No s'han assignat equips amb identificació ambigua.",
+  "matches": [
+    {
+      "date": "2026-11-21",
+      "time": "09:00",
+      "team": "Alevín S12 C",
+      "opponent": "Sant Andreu de la Barca",
+      "venue": "Mpal Can Salvi",
+      "home": false
+    },
+    {
+      "date": "2026-11-21",
+      "time": "09:00",
+      "team": "Benjamín S9 A",
+      "opponent": "Olesa C.F.",
+      "venue": "Mpal Les Planes",
+      "home": false
+    },
+    {
+      "date": "2026-11-21",
+      "time": "09:45",
+      "team": "Alevín S12 B",
+      "opponent": "Terlenka C.F.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-21",
+      "time": "10:30",
+      "team": "Alevín S11 A",
+      "opponent": "Assoc. Esp. Sant Vicenç",
+      "venue": "Mpal La Guàrdia",
+      "home": false
+    },
+    {
+      "date": "2026-11-21",
+      "time": "11:00",
+      "team": "Infantil S13",
+      "opponent": "Ciudad Cooperativa C.F.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-21",
+      "time": "12:15",
+      "team": "Juvenil C",
+      "opponent": "Sporting Gavà",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-21",
+      "time": "12:15",
+      "team": "Prebenjamín S7 A",
+      "opponent": "A.E. Abrera",
+      "venue": "Mpal Abrera",
+      "home": false
+    },
+    {
+      "date": "2026-11-21",
+      "time": "13:00",
+      "team": "Juvenil Fem A",
+      "opponent": "Santboià F.C.",
+      "venue": "Mpal Joan Baptista Milà",
+      "home": false
+    },
+    {
+      "date": "2026-11-21",
+      "time": "13:45",
+      "team": "Cadete S15",
+      "opponent": "Sant Vicenç Assoc. Esp.",
+      "venue": "Mpal La Guàrdia",
+      "home": false
+    },
+    {
+      "date": "2026-11-21",
+      "time": "14:00",
+      "team": "Infantil Fem A",
+      "opponent": "Escola F. Gavà",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-21",
+      "time": "14:00",
+      "team": "PBSV Genuine Grana",
+      "opponent": "Ampans",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-21",
+      "time": "18:00",
+      "team": "Amateur A",
+      "opponent": "Rubí U.E.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-21",
+      "time": "20:00",
+      "team": "Amateur Fem B",
+      "opponent": "Corbera C.F.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-22",
+      "time": "09:30",
+      "team": "Alevín S12 A",
+      "opponent": "Fund. Atlètic Sant Just",
+      "venue": "Mpal Sant Just",
+      "home": false
+    },
+    {
+      "date": "2026-11-22",
+      "time": "10:00",
+      "team": "Alevín S11 B",
+      "opponent": "P.B. Vallirana",
+      "venue": "Mpal de Vallirana",
+      "home": false
+    },
+    {
+      "date": "2026-11-22",
+      "time": "10:15",
+      "team": "Benjamín S10 A",
+      "opponent": "P.B. Roca del Vallès",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-22",
+      "time": "10:30",
+      "team": "PBSV Genuine Taronja",
+      "opponent": "Cirera",
+      "venue": "Mpal Antonio Jiménez",
+      "home": false
+    },
+    {
+      "date": "2026-11-22",
+      "time": "12:00",
+      "team": "Infantil S14",
+      "opponent": "Barcelona F.C.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-22",
+      "time": "12:00",
+      "team": "Juvenil B",
+      "opponent": "Incresa AT",
+      "venue": "ZEM Ricard Ginebreda",
+      "home": false
+    },
+    {
+      "date": "2026-11-22",
+      "time": "13:45",
+      "team": "PBSV Genuine Groc",
+      "opponent": "Arquera Cabrera",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-22",
+      "time": "16:00",
+      "team": "Juvenil A",
+      "opponent": "Terlenka C.F.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-22",
+      "time": "18:00",
+      "team": "Amateur Fem A",
+      "opponent": "Femení Garraf F.F.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-22",
+      "time": "20:00",
+      "team": "Amateur B",
+      "opponent": "Cervelló C.D.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    }
+  ]
+}
