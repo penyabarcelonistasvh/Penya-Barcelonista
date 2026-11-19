@@ -87,6 +87,24 @@
       "achievement": "Reconeixement Festa de l'Esport Vicentí",
       "type": "reconeixement",
       "source": "https://svh.cat/actualitat/noticies/recull-fotografic-de-la-14a-festa-de-lesport-vicenti/"
+    },
+    {
+      "season": "2023-24",
+      "date": "2024-05-30",
+      "team": "Cadet femení",
+      "achievement": "Campió de lliga, confirmat a revista municipal de juny-juliol 2024; grup i ascens no especificats",
+      "type": "campionat_de_lliga",
+      "source": "https://svh.cat/wp-content/uploads/2024/07/SVH_57_Juny_Juliol_2024.pdf"
+    }
+  ],
+  "research_sources": [
+    {
+      "name": "Arxiu de revistes municipals",
+      "url": "https://svh.cat/actualitat/edicions-municipals-i-publicacions/revista-municipal/"
+    },
+    {
+      "name": "Consulta de documentació a l'Arxiu Municipal",
+      "url": "https://svh.cat/tramita/tramits/consulta-de-documentacio-a-larxiu-municipal/"
     }
   ]
 }
