@@ -1,0 +1,34 @@
+name: Preparar revisio automatica dels horaris dels cartells
+on:
+  push:
+    paths:
+      - 'data/club.json'
+      - '.github/workflows/preparar-horaris-cartells.yml'
+      - 'scripts/extreure-horaris-cartells.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: horaris-cartells
+  cancel-in-progress: false
+jobs:
+  extreure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instal·lar OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-cat tesseract-ocr-spa
+      - name: Extreure text dels cartells sense publicar horaris no verificats
+        run: python3 scripts/extreure-horaris-cartells.py
+      - name: Desar proposta per revisar
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/revisio-horaris-cartells.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Preparar lectura OCR dels cartells per revisio"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
