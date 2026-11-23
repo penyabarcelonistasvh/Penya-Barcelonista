@@ -73,6 +73,18 @@ for attr, value in re.findall(r"""\b(src|href)=["']([^"'<>]+)["']""", index, fla
                                       ".webp", ".ico", ".html", ".webmanifest"):
         check((ROOT / local).is_file(), "Recurs local disponible: " + local)
 
+# Les guies han de ser només d'interfície i carregar-se als editors previstos.
+for page, helper in (("admin.html", "admin-easy-start.js"),
+                     ("editor-noticies.html", "admin-news-guide.js"),
+                     ("editor-partits.html", "admin-editor-help.js"),
+                     ("editor-equips.html", "admin-editor-help.js"),
+                     ("editor-patrocinadors.html", "admin-editor-help.js")):
+    page_html = read(page)
+    check('./' + helper in page_html, "Guia accessible: " + page)
+    helper_js = read(helper)
+    check("api/publish" not in helper_js and "localStorage" not in helper_js,
+          "La guia no altera la publicació ni els esborranys: " + helper)
+
 news_js = read("news-carousel-enhancement.js")
 check("data/noticies.json" in news_js and "portada!==false" in news_js,
       "El carrusel consumeix notícies publicades i respecta visibilitat")
