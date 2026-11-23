@@ -1,0 +1,14 @@
+name: Auditoria segura de regressions (sense publicar)
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  comprovar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar portada, recursos, noticies, equips i notificacions
+        run: python3 scripts/comprovar-regressions.py
