@@ -30,3 +30,8 @@ La definició de permisos i el mapa inicial de rutes són a `cloudflare/admin-pe
 - Crear i vincular D1 al Worker i aplicar la migració revisada.
 - Implementar i desplegar el Worker actualitzat, amb comprovacions reals de permisos.
 - Verificar que les publicacions i els avisos continuen funcionant per al propietari.
+
+## API preparat (pendent de desplegament del Worker)
+El codi de `cloudflare/worker.js` inclou ara `GET /api/admin/users`, `POST /api/admin/users` i `PATCH /api/admin/users/:id`. Només accepta la sessió GitHub del propietari, comprova l'origen de les escriptures i requereix el binding D1 `ADMIN_DB`. Les altes es creen **inactives** i no envien invitacions; cap editor pot iniciar sessió encara. `PATCH` permet revisar permisos i desactivar usuaris, però no activar-los abans de verificar el correu. La ruta no s'ha desplegat a Cloudflare.
+
+Per configurar D1 més endavant: crear una base de dades privada, aplicar `cloudflare/migrations/0001_admin_users.sql`, afegir el binding `ADMIN_DB` al Worker `pbsv-admin`, desplegar el Worker i comprovar que l'API rebutja sessions no propietàries. No introduir tokens ni claus al repositori.
