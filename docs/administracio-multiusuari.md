@@ -22,11 +22,11 @@ Estat: **en preparació, no activat a producció**. El Worker actual continua ac
 10. Migració: conservar l'accés GitHub del propietari fins que el nou sistema estigui validat.
 
 ## Política de permisos
-La definició de permisos i el mapa inicial de rutes són a `cloudflare/admin-permissions.js`.
+La definició de permisos i el mapa inicial de rutes són a `cloudflare/admin-permissions.js`.\nL'esquema D1 preparatori és a `cloudflare/migrations/0001_admin_users.sql`; encara no s'ha aplicat a cap base de dades.
 És una **definició**, no un mecanisme d'autenticació. No s'ha de mostrar cap botó funcional d'alta d'usuaris fins que les rutes de gestió i la verificació d'identitat estiguin actives.
 
 ## Dependències pendents
 - Escollir/configurar el servei de verificació per correu i les credencials corresponents.
-- Crear l'emmagatzematge privat de comptes.
+- Crear i vincular D1 al Worker i aplicar la migració revisada.
 - Implementar i desplegar el Worker actualitzat, amb comprovacions reals de permisos.
 - Verificar que les publicacions i els avisos continuen funcionant per al propietari.
