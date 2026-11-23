@@ -50,7 +50,7 @@ create.addEventListener('click',async()=>{if(!ready)return;
  const display_name=nameField.value.trim(),email=emailField.value.trim();
  if(!display_name||!emailField.validity.valid||!email){message('Introdueix un nom i un correu vàlids.');return}
  create.disabled=true;
- try{const permissions=fields.filter(x=>x.checked).map((x,i)=>x.dataset.permission);
+ try{const permissions=fields.filter(x=>x.checked).map(x=>x.dataset.permission);
  const r=await fetch('./api/admin/users',{method:'POST',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({display_name,email,permissions})});
  const data=await r.json();if(!r.ok)throw Error(data.error||'No s’ha pogut crear el compte.');
  nameField.value='';emailField.value='';await load();message('Administrador desat com a inactiu. Encara no s’ha enviat cap invitació.');
