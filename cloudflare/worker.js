@@ -45,6 +45,61 @@ export default {async fetch(req,env){
  if(path==='/auth/logout')return respond(null,302,{'Location':origin+'/','Set-Cookie':cookie('pbsv_session','',0)});
  const s=await session(req,env);
  if(path==='/api/me')return respond(JSON.stringify({authenticated:!!s,login:s?.login||null}),200,{'Content-Type':'application/json'});
+
+ // Gestió d'usuaris: només propietari GitHub. Requereix binding D1 ADMIN_DB.
+ if(path==='/api/admin/users'||path.startsWith('/api/admin/users/')){
+  const json=(data,status=200)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
+  if(!['GET','POST','PATCH'].includes(req.method))return json({error:'Mètode no permès.'},405);
+  if(!s)return json({error:'Cal iniciar sessió.'},401);
+  const identityResponse=await github('/user',s.token);
+  if(!identityResponse.ok)return json({error:'Sessió caducada.'},401);
+  const identity=await identityResponse.json();
+  if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return json({error:'Només el propietari pot gestionar administradors.'},403);
+  if(!env.ADMIN_DB)return json({error:'Base de dades d’administradors encara no configurada.'},503);
+  if(req.method!=='GET'&&(req.headers.get('Origin')!==origin||req.headers.get('X-PBSV-Action')!=='admin-users'))return json({error:'Acció no autoritzada.'},403);
+  const permissions=['news','matches','notifications','teams','sponsors','club'];
+  const userId=path.startsWith('/api/admin/users/')?path.slice('/api/admin/users/'.length):null;
+  if(userId&&!/^[0-9a-f-]{36}$/.test(userId))return json({error:'Identificador incorrecte.'},400);
+  try{
+   const db=env.ADMIN_DB;
+   if(req.method==='GET'){
+    if(userId)return json({error:'Ruta no disponible.'},404);
+    const users=await db.prepare('SELECT id,email,display_name,role,active,created_at FROM admin_users ORDER BY created_at DESC').all();
+    const grants=await db.prepare('SELECT user_id,permission FROM admin_permissions').all();
+    return json({users:(users.results||[]).map(u=>({...u,active:!!u.active,permissions:(grants.results||[]).filter(p=>p.user_id===u.id).map(p=>p.permission)}))});
+   }
+   const raw=await req.text();if(raw.length>4096)return json({error:'Sol·licitud massa gran.'},413);
+   let data;try{data=JSON.parse(raw)}catch{return json({error:'JSON incorrecte.'},400)}
+   if(req.method==='POST'){
+    if(userId)return json({error:'Ruta incorrecta.'},404);
+    const email=String(data?.email||'').trim().toLowerCase(),name=String(data?.display_name||'').trim();
+    const grants=data?.permissions??['news','matches','notifications'];
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||!name||name.length>120)return json({error:'Nom o correu incorrectes.'},400);
+    if(!Array.isArray(grants)||grants.length>permissions.length||new Set(grants).size!==grants.length||grants.some(p=>!permissions.includes(p)))return json({error:'Permisos incorrectes.'},400);
+    const id=crypto.randomUUID();
+    // Els comptes nous queden inactius fins que s'implementi la verificació del correu.
+    const queries=[db.prepare("INSERT INTO admin_users (id,email,display_name,role,active) VALUES (?,?,?,'editor',0)").bind(id,email,name),...grants.map(p=>db.prepare('INSERT INTO admin_permissions (user_id,permission) VALUES (?,?)').bind(id,p))];
+    await db.batch(queries);
+    return json({ok:true,id,active:false,invitation_sent:false},201);
+   }
+   if(!userId)return json({error:'Falta l’identificador.'},400);
+   const user=await db.prepare('SELECT id,role,active FROM admin_users WHERE id=?').bind(userId).first();
+   if(!user)return json({error:'Usuari inexistent.'},404);
+   if(user.role==='owner')return json({error:'El propietari no es pot modificar des d’aquesta ruta.'},403);
+   const grants=data?.permissions;
+   if(grants!==undefined&&(!Array.isArray(grants)||grants.length>permissions.length||new Set(grants).size!==grants.length||grants.some(p=>!permissions.includes(p))))return json({error:'Permisos incorrectes.'},400);
+   if(data?.active===true)return json({error:'L’activació requereix abans la verificació del correu; encara no està disponible.'},409);
+   if(data?.active!==undefined&&data.active!==false)return json({error:'Estat incorrecte.'},400);
+   if(grants===undefined&&data?.active===undefined)return json({error:'Cap canvi indicat.'},400);
+   const queries=[];
+   if(data?.active===false)queries.push(db.prepare('UPDATE admin_users SET active=0,session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
+   if(grants!==undefined){queries.push(db.prepare('DELETE FROM admin_permissions WHERE user_id=?').bind(userId));for(const p of grants)queries.push(db.prepare('INSERT INTO admin_permissions (user_id,permission) VALUES (?,?)').bind(userId,p))}
+   await db.batch(queries);
+   return json({ok:true,active:false});
+  }catch(e){
+   return json({error:'No s’ha pogut completar l’operació. Comprova la configuració de D1.'},503);
+  }
+ }
  if(path==='/api/push/subscribers'&&req.method==='GET'){
   const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
   if(!s)return json({error:'Inicia sessió amb GitHub.'},401);
