@@ -26,18 +26,18 @@ button:disabled{opacity:.55;cursor:not-allowed}.help{font-size:13px}.back{displa
 <label class="field" for="adminEmail">Correu electrònic</label><input id="adminEmail" type="email" placeholder="nom@exemple.cat" disabled>
 <h2 style="margin-top:24px">Permisos inicials previstos</h2>
 <div class="permissions">
-<label class="permission"><input type="checkbox" checked> 📰 Notícies</label>
-<label class="permission"><input type="checkbox" checked> 📅 Partits i cartells</label>
-<label class="permission"><input type="checkbox" checked> 📣 Enviar notificacions directament</label>
-<label class="permission"><input type="checkbox"> ⚽ Equips i plantilles</label>
-<label class="permission"><input type="checkbox"> 🤝 Patrocinadors</label>
-<label class="permission"><input type="checkbox"> 🏟️ Informació del club</label>
-<label class="permission"><input type="checkbox"> 🔐 Gestionar administradors</label>
+<label class="permission"><input type="checkbox" data-permission="news" checked> 📰 Notícies</label>
+<label class="permission"><input type="checkbox" data-permission="matches" checked> 📅 Partits i cartells</label>
+<label class="permission"><input type="checkbox" data-permission="notifications" checked> 📣 Enviar notificacions directament</label>
+<label class="permission"><input type="checkbox" data-permission="teams"> ⚽ Equips i plantilles</label>
+<label class="permission"><input type="checkbox" data-permission="sponsors"> 🤝 Patrocinadors</label>
+<label class="permission"><input type="checkbox" data-permission="club"> 🏟️ Informació del club</label>
+<label class="permission"><input type="checkbox" disabled> 🔐 Gestionar administradors</label>
 </div><p class="help">Pots marcar i desmarcar els permisos per veure com funcionarà. Aquesta prova no desa els canvis. Els administradors nous no podran concedir-se permisos a si mateixos.</p>
 <button type="button" disabled aria-describedby="activationNote">Crear administrador (pendent d'activació)</button><p id="activationNote" class="help">La creació romandrà bloquejada fins que el servidor verifiqui la identitat i els permisos.</p>
-<p id="permissionSummary" class="help" aria-live="polite"></p></section><a class="back" href="./admin.html">← Tornar al panell</a></main><script>
+<p id="permissionSummary" class="help" aria-live="polite"></p></section><section aria-labelledby="existingTitle"><h2 id="existingTitle">Administradors registrats</h2><p id="adminApiStatus" role="status" aria-live="polite">Comprovant connexió segura…</p><div id="adminUserList"></div></section><a class="back" href="./admin.html">← Tornar al panell</a></main><script>
 const labels=[...document.querySelectorAll('.permission')];
 const summary=document.getElementById('permissionSummary');
 function refresh(){const selected=labels.filter(label=>label.querySelector('input').checked).map(label=>label.textContent.trim());summary.textContent='Permisos seleccionats a la demostració ('+selected.length+'): '+(selected.join(', ')||'Cap')+'. No s\'han desat canvis.';}
 labels.forEach(label=>label.querySelector('input').addEventListener('change',refresh));refresh();
-</script></body></html>
+</script><script src="./admin-usuaris-api.js?v=1" defer></script></body></html>
