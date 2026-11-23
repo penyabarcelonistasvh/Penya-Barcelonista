@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestió d'administradors · PBSV</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#182845;background:#f2f5fa}*{box-sizing:border-box}body{margin:0}
+header{background:#142c5d;padding:17px 22px;color:#fff}header a{color:#fff;text-decoration:none;font-weight:700}
+main{max-width:880px;margin:auto;padding:22px 16px 45px}h1{font-size:clamp(24px,4vw,34px);margin:10px 0}h2{font-size:20px;margin:0 0 12px}
+p{line-height:1.5;color:#53647b}.panel{background:#fff;border:1px solid #dbe3ef;border-radius:15px;padding:20px;margin:18px 0}
+.status{background:#fff6e6;border-left:4px solid #c77b12;padding:13px 16px;border-radius:8px;color:#593c0d;line-height:1.5}
+.status p{color:inherit;margin:5px 0 0}.owner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pill{font-size:12px;border-radius:100px;padding:6px 10px;background:#e7f5ec;color:#20643d;font-weight:700}
+.permissions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.permission{display:flex;gap:9px;align-items:center;padding:12px;border:1px solid #e0e6ef;border-radius:10px;color:#253752}
+.permission input{accent-color:#174b9d;width:18px;height:18px}.permission:has(input:disabled){opacity:.8}
+input[type=email],input[type=text]{width:100%;padding:12px;border:1px solid #ccd5e2;border-radius:9px;font:inherit;background:#f7f9fc}
+label.field{display:block;margin:12px 0 5px;font-weight:650}button{background:#174b9d;color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:700;font:inherit}
+button:disabled{opacity:.55;cursor:not-allowed}.help{font-size:13px}.back{display:inline-block;margin-top:12px;color:#174b9d}
+@media(max-width:620px){.permissions{grid-template-columns:1fr}.panel{padding:16px}}
+</style></head><body>
+<header><a href="./admin.html">← PBSV · Panell d'administració</a></header>
+<main><h1>👥 Gestió d'administradors</h1><p>Configura qui podrà gestionar cada apartat de l'aplicació.</p>
+<div class="status" role="status"><strong>Mòdul en preparació — encara no es poden crear comptes.</strong><p>Falta connectar la base de dades privada i activar l'accés per correu al servidor. Aquesta pantalla mostra els permisos previstos, però no desa dades ni concedeix accessos.</p></div>
+<section class="panel"><h2>Administrador principal</h2><div class="owner"><div><strong>Compte propietari de la Penya</strong><p>Accés actual amb GitHub · tots els permisos</p></div><span class="pill">Control total</span></div></section>
+<section class="panel"><h2>Nou administrador</h2><p>Quan el sistema estigui actiu, podràs introduir un correu, activar permisos i enviar una invitació segura.</p>
+<label class="field" for="adminName">Nom</label><input id="adminName" type="text" placeholder="Nom de l'administrador" disabled>
+<label class="field" for="adminEmail">Correu electrònic</label><input id="adminEmail" type="email" placeholder="nom@exemple.cat" disabled>
+<h2 style="margin-top:24px">Permisos inicials previstos</h2>
+<div class="permissions">
+<label class="permission"><input type="checkbox" checked disabled> 📰 Notícies</label>
+<label class="permission"><input type="checkbox" checked disabled> 📅 Partits i cartells</label>
+<label class="permission"><input type="checkbox" checked disabled> 📣 Enviar notificacions directament</label>
+<label class="permission"><input type="checkbox" disabled> ⚽ Equips i plantilles</label>
+<label class="permission"><input type="checkbox" disabled> 🤝 Patrocinadors</label>
+<label class="permission"><input type="checkbox" disabled> 🏟️ Informació del club</label>
+<label class="permission"><input type="checkbox" disabled> 🔐 Gestionar administradors</label>
+</div><p class="help">Els permisos seran editables individualment des del panell un cop activat el sistema. Els administradors nous no podran concedir-se permisos a si mateixos.</p>
+<button type="button" disabled aria-describedby="activationNote">Crear administrador (pendent d'activació)</button><p id="activationNote" class="help">La creació romandrà bloquejada fins que el servidor verifiqui la identitat i els permisos.</p>
+</section><a class="back" href="./admin.html">← Tornar al panell</a></main></body></html>
