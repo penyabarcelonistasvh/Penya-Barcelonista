@@ -19,20 +19,25 @@ button:disabled{opacity:.55;cursor:not-allowed}.help{font-size:13px}.back{displa
 </style></head><body>
 <header><a href="./admin.html">← PBSV · Panell d'administració</a></header>
 <main><h1>👥 Gestió d'administradors</h1><p>Configura qui podrà gestionar cada apartat de l'aplicació.</p>
-<div class="status" role="status"><strong>Mòdul en preparació — encara no es poden crear comptes.</strong><p>Falta connectar la base de dades privada i activar l'accés per correu al servidor. Aquesta pantalla mostra els permisos previstos, però no desa dades ni concedeix accessos.</p></div>
+<div class="status" role="status"><strong>Mòdul en preparació — encara no es poden crear comptes.</strong><p>Falta connectar la base de dades privada i activar l'accés per correu al servidor. Pots provar els permisos visualment, però no es desen dades ni es concedeixen accessos.</p></div>
 <section class="panel"><h2>Administrador principal</h2><div class="owner"><div><strong>Compte propietari de la Penya</strong><p>Accés actual amb GitHub · tots els permisos</p></div><span class="pill">Control total</span></div></section>
 <section class="panel"><h2>Nou administrador</h2><p>Quan el sistema estigui actiu, podràs introduir un correu, activar permisos i enviar una invitació segura.</p>
 <label class="field" for="adminName">Nom</label><input id="adminName" type="text" placeholder="Nom de l'administrador" disabled>
 <label class="field" for="adminEmail">Correu electrònic</label><input id="adminEmail" type="email" placeholder="nom@exemple.cat" disabled>
 <h2 style="margin-top:24px">Permisos inicials previstos</h2>
 <div class="permissions">
-<label class="permission"><input type="checkbox" checked disabled> 📰 Notícies</label>
-<label class="permission"><input type="checkbox" checked disabled> 📅 Partits i cartells</label>
-<label class="permission"><input type="checkbox" checked disabled> 📣 Enviar notificacions directament</label>
-<label class="permission"><input type="checkbox" disabled> ⚽ Equips i plantilles</label>
-<label class="permission"><input type="checkbox" disabled> 🤝 Patrocinadors</label>
-<label class="permission"><input type="checkbox" disabled> 🏟️ Informació del club</label>
-<label class="permission"><input type="checkbox" disabled> 🔐 Gestionar administradors</label>
-</div><p class="help">Els permisos seran editables individualment des del panell un cop activat el sistema. Els administradors nous no podran concedir-se permisos a si mateixos.</p>
+<label class="permission"><input type="checkbox" checked> 📰 Notícies</label>
+<label class="permission"><input type="checkbox" checked> 📅 Partits i cartells</label>
+<label class="permission"><input type="checkbox" checked> 📣 Enviar notificacions directament</label>
+<label class="permission"><input type="checkbox"> ⚽ Equips i plantilles</label>
+<label class="permission"><input type="checkbox"> 🤝 Patrocinadors</label>
+<label class="permission"><input type="checkbox"> 🏟️ Informació del club</label>
+<label class="permission"><input type="checkbox"> 🔐 Gestionar administradors</label>
+</div><p class="help">Pots marcar i desmarcar els permisos per veure com funcionarà. Aquesta prova no desa els canvis. Els administradors nous no podran concedir-se permisos a si mateixos.</p>
 <button type="button" disabled aria-describedby="activationNote">Crear administrador (pendent d'activació)</button><p id="activationNote" class="help">La creació romandrà bloquejada fins que el servidor verifiqui la identitat i els permisos.</p>
-</section><a class="back" href="./admin.html">← Tornar al panell</a></main></body></html>
+<p id="permissionSummary" class="help" aria-live="polite"></p></section><a class="back" href="./admin.html">← Tornar al panell</a></main><script>
+const labels=[...document.querySelectorAll('.permission')];
+const summary=document.getElementById('permissionSummary');
+function refresh(){const selected=labels.filter(label=>label.querySelector('input').checked).map(label=>label.textContent.trim());summary.textContent='Permisos seleccionats a la demostració ('+selected.length+'): '+(selected.join(', ')||'Cap')+'. No s\'han desat canvis.';}
+labels.forEach(label=>label.querySelector('input').addEventListener('change',refresh));refresh();
+</script></body></html>
