@@ -28,6 +28,12 @@ async function localPrincipal(env,s){
 function localCanPublish(principal,file){
  return !!principal&&!principal.mustChange&&Object.hasOwn(FILE_PERMISSION,file)&&principal.permissions.has(FILE_PERMISSION[file]);
 }
+async function makePasswordCredential(password){
+ const salt=crypto.getRandomValues(new Uint8Array(32)),iterations=600000;
+ const material=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
+ const hash=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},material,256);
+ return {hash:b64(new Uint8Array(hash)),salt:b64(salt),iterations};
+}
 async function localPasswordMatches(password,credential){
  const salt=unb64(credential.password_salt);
  const expected=unb64(credential.password_hash);
@@ -140,10 +146,8 @@ export default {async fetch(req,env){
     // Els comptes nous queden inactius fins que s'implementi la verificació del correu.
     const queries=[db.prepare("INSERT INTO admin_users (id,email,display_name,role,active) VALUES (?,?,?,'editor',0)").bind(id,email,name),...grants.map(p=>db.prepare('INSERT INTO admin_permissions (user_id,permission) VALUES (?,?)').bind(id,p))];
     if(local){
-     const salt=crypto.getRandomValues(new Uint8Array(32)),iterations=600000;
-     const material=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
-     const hash=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},material,256);
-     queries.push(db.prepare('INSERT INTO admin_credentials (user_id,username,password_hash,password_salt,password_iterations) VALUES (?,?,?,?,?)').bind(id,username,b64(new Uint8Array(hash)),b64(salt),iterations));
+     const credential=await makePasswordCredential(password);
+     queries.push(db.prepare('INSERT INTO admin_credentials (user_id,username,password_hash,password_salt,password_iterations) VALUES (?,?,?,?,?)').bind(id,username,credential.hash,credential.salt,credential.iterations));
     }
     await db.batch(queries);
     return json({ok:true,id,active:false,invitation_sent:false},201);
@@ -156,8 +160,17 @@ export default {async fetch(req,env){
    if(grants!==undefined&&(!Array.isArray(grants)||grants.length>permissions.length||new Set(grants).size!==grants.length||grants.some(p=>!permissions.includes(p))))return json({error:'Permisos incorrectes.'},400);
    if(data?.active===true)return json({error:'L’accés amb contrasenya encara no està disponible.'},409);
    if(data?.active!==undefined&&data.active!==false)return json({error:'Estat incorrecte.'},400);
-   if(grants===undefined&&data?.active===undefined)return json({error:'Cap canvi indicat.'},400);
+   const reset=data?.password!==undefined;
+   if(reset&&(typeof data.password!=='string'||data.password.length<12||data.password.length>128))return json({error:'Contrasenya de 12 a 128 caràcters requerida.'},400);
+   if(grants===undefined&&data?.active===undefined&&!reset)return json({error:'Cap canvi indicat.'},400);
    const queries=[];
+   if(reset){
+    const existing=await db.prepare('SELECT user_id FROM admin_credentials WHERE user_id=?').bind(userId).first();
+    if(!existing)return json({error:'Aquest compte no té credencials locals.'},409);
+    const credential=await makePasswordCredential(data.password);
+    queries.push(db.prepare('UPDATE admin_credentials SET password_hash=?,password_salt=?,password_iterations=?,must_change_password=1,updated_at=CURRENT_TIMESTAMP WHERE user_id=?').bind(credential.hash,credential.salt,credential.iterations,userId));
+    queries.push(db.prepare('UPDATE admin_users SET session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
+   }
    if(data?.active===false)queries.push(db.prepare('UPDATE admin_users SET active=0,session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
    if(grants!==undefined){queries.push(db.prepare('DELETE FROM admin_permissions WHERE user_id=?').bind(userId));for(const p of grants)queries.push(db.prepare('INSERT INTO admin_permissions (user_id,permission) VALUES (?,?)').bind(userId,p))}
    await db.batch(queries);
