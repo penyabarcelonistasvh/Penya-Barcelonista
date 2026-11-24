@@ -158,7 +158,7 @@ export default {async fetch(req,env){
    const db=env.ADMIN_DB;
    if(req.method==='GET'){
     if(userId)return json({error:'Ruta no disponible.'},404);
-    const users=await db.prepare('SELECT u.id,u.email,u.display_name,u.role,u.active,u.created_at,c.username FROM admin_users u LEFT JOIN admin_credentials c ON c.user_id=u.id ORDER BY u.created_at DESC').all();
+    const users=await db.prepare('SELECT u.id,u.email,u.display_name,u.role,u.active,u.created_at,c.username,c.must_change_password FROM admin_users u LEFT JOIN admin_credentials c ON c.user_id=u.id ORDER BY u.created_at DESC').all();
     const grants=await db.prepare('SELECT user_id,permission FROM admin_permissions').all();
     return json({local_credentials:true,users:(users.results||[]).map(u=>({...u,active:!!u.active,permissions:(grants.results||[]).filter(p=>p.user_id===u.id).map(p=>p.permission)}))});
    }
@@ -178,7 +178,7 @@ export default {async fetch(req,env){
     const queries=[db.prepare("INSERT INTO admin_users (id,email,display_name,role,active) VALUES (?,?,?,'editor',0)").bind(id,email,name),...grants.map(p=>db.prepare('INSERT INTO admin_permissions (user_id,permission) VALUES (?,?)').bind(id,p))];
     if(local){
      const credential=await makePasswordCredential(password);
-     queries.push(db.prepare('INSERT INTO admin_credentials (user_id,username,password_hash,password_salt,password_iterations) VALUES (?,?,?,?,?)').bind(id,username,credential.hash,credential.salt,credential.iterations));
+     queries.push(db.prepare('INSERT INTO admin_credentials (user_id,username,password_hash,password_salt,password_iterations,must_change_password) VALUES (?,?,?,?,?,?)').bind(id,username,credential.hash,credential.salt,credential.iterations,data.must_change_password===false?0:1));
     }
     await db.batch(queries);
     return json({ok:true,id,active:false,invitation_sent:false},201);
@@ -199,7 +199,7 @@ export default {async fetch(req,env){
     const existing=await db.prepare('SELECT user_id FROM admin_credentials WHERE user_id=?').bind(userId).first();
     if(!existing)return json({error:'Aquest compte no té credencials locals.'},409);
     const credential=await makePasswordCredential(data.password);
-    queries.push(db.prepare('UPDATE admin_credentials SET password_hash=?,password_salt=?,password_iterations=?,must_change_password=1,updated_at=CURRENT_TIMESTAMP WHERE user_id=?').bind(credential.hash,credential.salt,credential.iterations,userId));
+    queries.push(db.prepare('UPDATE admin_credentials SET password_hash=?,password_salt=?,password_iterations=?,must_change_password=?,updated_at=CURRENT_TIMESTAMP WHERE user_id=?').bind(credential.hash,credential.salt,credential.iterations,data.must_change_password===false?0:1,userId));
     queries.push(db.prepare('UPDATE admin_users SET session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
    }
    if(data?.active===false)queries.push(db.prepare('UPDATE admin_users SET active=0,session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
