@@ -12,18 +12,19 @@ p{line-height:1.5;color:#53647b}.panel{background:#fff;border:1px solid #dbe3ef;
 .permissions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .permission{display:flex;gap:9px;align-items:center;padding:12px;border:1px solid #e0e6ef;border-radius:10px;color:#253752}
 .permission input{accent-color:#174b9d;width:18px;height:18px}.permission:has(input:disabled){opacity:.8}
-input[type=email],input[type=text]{width:100%;padding:12px;border:1px solid #ccd5e2;border-radius:9px;font:inherit;background:#f7f9fc}
+input[type=email],input[type=text],input[type=password]{width:100%;padding:12px;border:1px solid #ccd5e2;border-radius:9px;font:inherit;background:#f7f9fc}
 label.field{display:block;margin:12px 0 5px;font-weight:650}button{background:#174b9d;color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:700;font:inherit}
 button:disabled{opacity:.55;cursor:not-allowed}.help{font-size:13px}.back{display:inline-block;margin-top:12px;color:#174b9d}
 @media(max-width:620px){.permissions{grid-template-columns:1fr}.panel{padding:16px}}
 </style></head><body>
 <header><a href="./admin.html">← PBSV · Panell d'administració</a></header>
 <main><h1>👥 Gestió d'administradors</h1><p>Configura qui podrà gestionar cada apartat de l'aplicació.</p>
-<div class="status" role="status"><strong>Gestió de comptes · activació per correu pendent.</strong><p>Els comptes es poden desar quan el servidor confirma la connexió. No es concedeixen accessos fins a activar la verificació per correu.</p></div>
+<div class="status" role="status"><strong>Gestió de comptes · accés amb contrasenya pendent.</strong><p>Els comptes es poden desar quan el servidor confirma la connexió. Els comptes nous romandran inactius fins a habilitar l’accés.</p></div>
 <section class="panel"><h2>Administrador principal</h2><div class="owner"><div><strong>Compte propietari de la Penya</strong><p>Accés actual amb GitHub · tots els permisos</p></div><span class="pill">Control total</span></div></section>
-<section class="panel"><h2>Nou administrador</h2><p>Introdueix el nom, el correu i els permisos. El compte quedarà inactiu fins a habilitar les invitacions.</p>
+<section class="panel"><h2>Nou administrador</h2><p>Introdueix el nom, l’usuari, la contrasenya inicial i els permisos.</p>
 <label class="field" for="adminName">Nom</label><input id="adminName" type="text" placeholder="Nom de l'administrador" disabled>
-<label class="field" for="adminEmail">Correu electrònic</label><input id="adminEmail" type="email" placeholder="nom@exemple.cat" disabled>
+<label class="field" for="adminEmail">Usuari</label><input id="adminEmail" type="text" autocomplete="off" autocapitalize="none" maxlength="40" placeholder="nom.usuari" disabled>
+<label class="field" for="adminPassword">Contrasenya inicial</label><input id="adminPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Mínim 12 caràcters" disabled>
 <h2 style="margin-top:24px">Permisos inicials</h2>
 <div class="permissions">
 <label class="permission"><input type="checkbox" data-permission="news" checked> 📰 Notícies</label>
@@ -40,4 +41,4 @@ const labels=[...document.querySelectorAll('.permission')];
 const summary=document.getElementById('permissionSummary');
 function refresh(){const selected=labels.filter(label=>label.querySelector('input').checked).map(label=>label.textContent.trim());summary.textContent='Permisos seleccionats ('+selected.length+'): '+(selected.join(', ')||'Cap')+'.';}
 labels.forEach(label=>label.querySelector('input').addEventListener('change',refresh));refresh();
-</script><script src="./admin-usuaris-api.js?v=2" defer></script></body></html>
+</script><script src="./admin-usuaris-api.js?v=3" defer></script></body></html>
