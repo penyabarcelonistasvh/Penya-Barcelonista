@@ -1,36 +1,75 @@
-name: Preparar desplegament Cloudflare admin
+name: Validar i desplegar Cloudflare admin
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Validar sense canvis o desplegar el Worker
+        type: choice
+        options:
+          - validar
+          - desplegar
+        default: validar
 permissions:
   contents: read
+concurrency:
+  group: pbsv-admin-deploy
+  cancel-in-progress: false
 jobs:
-  prepare:
+  admin:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validar codi
+      - name: Validar sintaxi
         run: |
           cp cloudflare/worker.js /tmp/worker.mjs
           node --check /tmp/worker.mjs
-      - name: Comprovar configuracio actual sense modificar-la
+      - name: Validar vinculacions i desplegar nomes si es demana
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          MODE: ${{ inputs.mode }}
         run: |
           python - <<'PY'
-          import os,json,urllib.request
-          url='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CF_ACCOUNT']+'/workers/scripts/pbsv-admin/settings'
-          req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['CF_TOKEN']})
-          with urllib.request.urlopen(req) as r: data=json.load(r)
-          assert data.get('success'), 'Consulta fallida'
-          bindings={b['name']:b['type'] for b in data['result'].get('bindings',[])}
+          import os,json,urllib.request,urllib.error,uuid,pathlib
+          base='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CF_ACCOUNT']+'/workers/scripts/pbsv-admin'
+          def call(suffix,method='GET',body=None,content_type=None):
+              headers={'Authorization':'Bearer '+os.environ['CF_TOKEN']}
+              if content_type: headers['Content-Type']=content_type
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(base+suffix,data=body,headers=headers,method=method),timeout=60) as r:
+                      result=json.load(r)
+              except urllib.error.HTTPError as e:
+                  raise SystemExit('Cloudflare HTTP '+str(e.code)+' a '+suffix)
+              if not result.get('success'): raise SystemExit('Cloudflare no ha confirmat '+suffix)
+              return result['result']
+          def settings():
+              return {b['name']:b for b in call('/settings').get('bindings',[])}
+          before=settings()
           required={'ADMIN_DB':'d1','PUSH_SERVICE':'service','PUSH_INTERNAL_TOKEN':'secret_text','GITHUB_CLIENT_SECRET':'secret_text','SESSION_KEY':'secret_text'}
           for name,kind in required.items():
-              if bindings.get(name)!=kind: raise SystemExit('Revisar vinculació '+name)
-          if 'GITHUB_CLIENT_ID' not in bindings: raise SystemExit('Falta GITHUB_CLIENT_ID')
-          print('Vinculacions requerides presents. Cap canvi desplegat.')
+              if before.get(name,{}).get('type')!=kind: raise SystemExit('Revisar vinculació '+name)
+          if 'GITHUB_CLIENT_ID' not in before: raise SystemExit('Falta GITHUB_CLIENT_ID')
+          print('Vinculacions requerides presents.')
+          if os.environ['MODE']!='desplegar':
+              print('Validació correcta. Cap canvi desplegat.')
+              raise SystemExit(0)
+          boundary=uuid.uuid4().hex
+          def part(name,data,kind,filename=None):
+              disposition='Content-Disposition: form-data; name="'+name+'"'
+              if filename: disposition+='; filename="'+filename+'"'
+              return ('--'+boundary+'\r\n'+disposition+'\r\nContent-Type: '+kind+'\r\n\r\n').encode()+data+b'\r\n'
+          body=part('metadata',b'{"main_module":"worker.js"}','application/json')
+          body+=part('worker.js',pathlib.Path('cloudflare/worker.js').read_bytes(),'application/javascript+module','worker.js')
+          body+=('--'+boundary+'--\r\n').encode()
+          call('/content','PUT',body,'multipart/form-data; boundary='+boundary)
+          after=settings()
+          if before!=after: raise SystemExit('ATENCIÓ: vinculacions diferents després de desplegar. Revisar Cloudflare.')
+          print('Codi actualitzat. Vinculacions conservades segons API.')
           PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pbsv-admin-worker-source
-          path: cloudflare/worker.js
+      - name: Comprovar resposta publica del Worker
+        if: inputs.mode == 'desplegar'
+        run: |
+          curl --fail --silent --show-error --max-time 30 https://pbsv-admin.cristiangarciajura.workers.dev/ -o /tmp/admin-response.html
+          grep -q 'Entrar amb GitHub' /tmp/admin-response.html
+          echo 'Pantalla de login disponible.'
