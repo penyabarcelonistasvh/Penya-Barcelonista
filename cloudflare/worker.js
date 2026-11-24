@@ -17,6 +17,17 @@ function config(env){return !!(env.GITHUB_CLIENT_ID&&env.GITHUB_CLIENT_SECRET&&e
 async function session(req,env){const value=cookies(req).pbsv_session;if(!value)return null;const s=await unseal(value,env);return s&&s.exp>Date.now()?s:null}
 // Autenticació local preparada, però deshabilitada fins a validar autorització.
 const LOCAL_LOGIN_ENABLED=false;
+const FILE_PERMISSION=Object.freeze({'equips.json':'teams','club.json':'club','noticies.json':'news','patrocinadors.json':'sponsors','partits-cap-setmana.json':'matches','proxims-partits.json':'matches'});
+async function localPrincipal(env,s){
+ if(s?.kind!=='local'||!env.ADMIN_DB||typeof s.userId!=='string'||!Number.isInteger(s.version))return null;
+ const u=await env.ADMIN_DB.prepare("SELECT u.id,u.display_name,u.active,u.role,u.session_version,c.username,c.must_change_password FROM admin_users u JOIN admin_credentials c ON c.user_id=u.id WHERE u.id=?").bind(s.userId).first();
+ if(!u||!u.active||u.role!=='editor'||u.session_version!==s.version)return null;
+ const grants=await env.ADMIN_DB.prepare('SELECT permission FROM admin_permissions WHERE user_id=?').bind(u.id).all();
+ return {id:u.id,username:u.username,displayName:u.display_name,mustChange:!!u.must_change_password,permissions:new Set((grants.results||[]).map(x=>x.permission).filter(x=>['news','matches','notifications','teams','sponsors','club'].includes(x)))};
+}
+function localCanPublish(principal,file){
+ return !!principal&&!principal.mustChange&&Object.hasOwn(FILE_PERMISSION,file)&&principal.permissions.has(FILE_PERMISSION[file]);
+}
 async function localPasswordMatches(password,credential){
  const salt=unb64(credential.password_salt);
  const expected=unb64(credential.password_hash);
@@ -86,6 +97,10 @@ export default {async fetch(req,env){
  }
  if(path==='/auth/logout')return respond(null,302,{'Location':origin+'/','Set-Cookie':cookie('pbsv_session','',0)});
  const s=await session(req,env);
+ // Fail closed: local sessions must never fall through to owner-only handlers.
+ if(s?.kind==='local'){
+  return respond(JSON.stringify({error:'Accés local encara no disponible.'}),403,{'Content-Type':'application/json','Set-Cookie':cookie('pbsv_session','',0)});
+ }
  if(path==='/api/me')return respond(JSON.stringify({authenticated:!!s,login:s?.login||null}),200,{'Content-Type':'application/json'});
 
  // Gestió d'usuaris: només propietari GitHub. Requereix binding D1 ADMIN_DB.
