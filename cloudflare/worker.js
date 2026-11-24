@@ -15,9 +15,51 @@ async function unseal(value,env){try{const [a,b]=value.split('.');const raw=awai
 async function github(path,token,options={}){return fetch('https://api.github.com'+path,{...options,headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'PBSV-Admin',...(options.headers||{})}})}
 function config(env){return !!(env.GITHUB_CLIENT_ID&&env.GITHUB_CLIENT_SECRET&&env.SESSION_KEY)}
 async function session(req,env){const value=cookies(req).pbsv_session;if(!value)return null;const s=await unseal(value,env);return s&&s.exp>Date.now()?s:null}
+// Autenticació local preparada, però deshabilitada fins a validar autorització.
+const LOCAL_LOGIN_ENABLED=false;
+async function localPasswordMatches(password,credential){
+ const salt=unb64(credential.password_salt);
+ const expected=unb64(credential.password_hash);
+ const iterations=credential.password_iterations;
+ if(salt.length!==32||expected.length!==32||iterations!==600000)return false;
+ const material=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
+ const actual=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},material,256));
+ let diff=0;for(let i=0;i<32;i++)diff|=actual[i]^expected[i];return diff===0;
+}
+async function reserveLoginAttempt(db,bucket,now,max){
+ const window=900;
+ const row=await db.prepare(`INSERT INTO admin_login_limits(bucket,attempts,window_started,blocked_until) VALUES (?,1,?,0)
+ ON CONFLICT(bucket) DO UPDATE SET attempts=CASE WHEN window_started<=? THEN 1 ELSE attempts+1 END,
+ window_started=CASE WHEN window_started<=? THEN excluded.window_started ELSE window_started END
+ RETURNING attempts`).bind(bucket,now,now-window,now-window).first();
+ return !!row&&row.attempts<=max;
+}
+async function localLogin(req,env,origin){
+ const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
+ if(!LOCAL_LOGIN_ENABLED)return json({error:'Accés local encara no disponible.'},503);
+ if(req.method!=='POST')return json({error:'Mètode no permès.'},405);
+ if(req.headers.get('Origin')!==origin||req.headers.get('X-PBSV-Action')!=='local-login')return json({error:'Origen no permès.'},403);
+ if(!env.ADMIN_DB)return json({error:'Servei no disponible.'},503);
+ let data;try{const raw=await req.text();if(raw.length>2048)return json({error:'Dades incorrectes.'},400);data=JSON.parse(raw)}catch{return json({error:'Dades incorrectes.'},400)}
+ const username=String(data?.username||'').trim().toLowerCase(),password=data?.password;
+ if(!/^[a-z0-9][a-z0-9._-]{2,39}$/.test(username)||typeof password!=='string'||password.length<12||password.length>128)return json({error:'Credencials incorrectes.'},401);
+ try{
+ const db=env.ADMIN_DB,now=Math.floor(Date.now()/1000);
+ const ip=req.headers.get('CF-Connecting-IP')||'unknown';
+ const ipHash=b64(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(ip))));
+ if(!await reserveLoginAttempt(db,'ip:'+ipHash,now,30)||!await reserveLoginAttempt(db,'user:'+username,now,8))return json({error:'Massa intents. Torna-ho a provar més tard.'},429);
+ const c=await db.prepare("SELECT c.*,u.active,u.role,u.session_version FROM admin_credentials c JOIN admin_users u ON u.id=c.user_id WHERE c.username=?").bind(username).first();
+ const dummy={password_salt:b64(new Uint8Array(32)),password_hash:b64(new Uint8Array(32)),password_iterations:600000};
+ const valid=await localPasswordMatches(password,c||dummy);
+ if(!valid||!c||!c.active||c.role!=='editor')return json({error:'Credencials incorrectes.'},401);
+ // No emetre sessions fins a implementar canvi de contrasenya i autorització de totes les rutes.
+ return json({error:'Accés local encara no disponible.'},503);
+ }catch{return json({error:'Servei no disponible.'},503)}
+}
 export default {async fetch(req,env){
  const url=new URL(req.url),origin=url.origin,path=url.pathname;
  if(!config(env)){const missing=['GITHUB_CLIENT_ID','GITHUB_CLIENT_SECRET','SESSION_KEY'].filter(k=>!env[k]);return respond('Configuració pendent. Variables absents: '+missing.join(', ')+'. Revisa Production → Settings → Variables and Secrets.',503);}
+ if(path==='/auth/local-login')return localLogin(req,env,origin);
  if(path==='/auth/login'){
   const state=b64(crypto.getRandomValues(new Uint8Array(24)));
   const auth=new URL('https://github.com/login/oauth/authorize');
