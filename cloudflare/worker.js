@@ -66,7 +66,7 @@ export default {async fetch(req,env){
     if(userId)return json({error:'Ruta no disponible.'},404);
     const users=await db.prepare('SELECT u.id,u.email,u.display_name,u.role,u.active,u.created_at,c.username FROM admin_users u LEFT JOIN admin_credentials c ON c.user_id=u.id ORDER BY u.created_at DESC').all();
     const grants=await db.prepare('SELECT user_id,permission FROM admin_permissions').all();
-    return json({users:(users.results||[]).map(u=>({...u,active:!!u.active,permissions:(grants.results||[]).filter(p=>p.user_id===u.id).map(p=>p.permission)}))});
+    return json({local_credentials:true,users:(users.results||[]).map(u=>({...u,active:!!u.active,permissions:(grants.results||[]).filter(p=>p.user_id===u.id).map(p=>p.permission)}))});
    }
    const raw=await req.text();if(raw.length>4096)return json({error:'Sol·licitud massa gran.'},413);
    let data;try{data=JSON.parse(raw)}catch{return json({error:'JSON incorrecte.'},400)}
@@ -97,7 +97,7 @@ export default {async fetch(req,env){
    if(user.role==='owner')return json({error:'El propietari no es pot modificar des d’aquesta ruta.'},403);
    const grants=data?.permissions;
    if(grants!==undefined&&(!Array.isArray(grants)||grants.length>permissions.length||new Set(grants).size!==grants.length||grants.some(p=>!permissions.includes(p))))return json({error:'Permisos incorrectes.'},400);
-   if(data?.active===true)return json({error:'L’activació requereix abans la verificació del correu; encara no està disponible.'},409);
+   if(data?.active===true)return json({error:'L’accés amb contrasenya encara no està disponible.'},409);
    if(data?.active!==undefined&&data.active!==false)return json({error:'Estat incorrecte.'},400);
    if(grants===undefined&&data?.active===undefined)return json({error:'Cap canvi indicat.'},400);
    const queries=[];
