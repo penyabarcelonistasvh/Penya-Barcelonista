@@ -25,6 +25,7 @@ button:disabled{opacity:.55;cursor:not-allowed}.help{font-size:13px}.back{displa
 <label class="field" for="adminName">Nom</label><input id="adminName" type="text" placeholder="Nom de l'administrador" disabled>
 <label class="field" for="adminEmail">Usuari</label><input id="adminEmail" type="text" autocomplete="off" autocapitalize="none" maxlength="40" placeholder="nom.usuari" disabled>
 <label class="field" for="adminPassword">Contrasenya inicial</label><input id="adminPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Mínim 12 caràcters" disabled>
+<label style="display:flex;gap:9px;align-items:center;margin-top:14px"><input type="checkbox" id="mustChangePassword" checked> Obligar a canviar la contrasenya en el primer accés</label>
 <h2 style="margin-top:24px">Permisos inicials</h2>
 <div class="permissions">
 <label class="permission"><input type="checkbox" data-permission="news" checked> 📰 Notícies</label>
@@ -41,4 +42,4 @@ const labels=[...document.querySelectorAll('.permission')];
 const summary=document.getElementById('permissionSummary');
 function refresh(){const selected=labels.filter(label=>label.querySelector('input').checked).map(label=>label.textContent.trim());summary.textContent='Permisos seleccionats ('+selected.length+'): '+(selected.join(', ')||'Cap')+'.';}
 labels.forEach(label=>label.querySelector('input').addEventListener('change',refresh));refresh();
-</script><script src="./admin-usuaris-api.js?v=3" defer></script></body></html>
+</script><script src="./admin-usuaris-api.js?v=4" defer></script></body></html>
