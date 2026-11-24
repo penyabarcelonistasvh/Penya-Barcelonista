@@ -1,0 +1,41 @@
+name: Comprovar connexio Cloudflare admin
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar sintaxi del Worker
+        run: |
+          cp cloudflare/worker.js /tmp/pbsv-worker.mjs
+          node --check /tmp/pbsv-worker.mjs
+      - name: Comprovar accés i vinculacions sense modificar Cloudflare
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          python - <<'PY'
+          import os, json, urllib.request, urllib.error
+          token=os.environ['CF_TOKEN']
+          account=os.environ['CF_ACCOUNT']
+          if not token or not account:
+              raise SystemExit('Falten secrets de Cloudflare')
+          url=f'https://api.cloudflare.com/client/v4/accounts/{account}/workers/scripts/pbsv-admin/settings'
+          req=urllib.request.Request(url,headers={'Authorization':'Bearer '+token})
+          try:
+              with urllib.request.urlopen(req) as r:
+                  data=json.load(r)
+          except urllib.error.HTTPError as e:
+              raise SystemExit(f'Cloudflare HTTP {e.code}; comprova permisos del token')
+          if not data.get('success'):
+              raise SystemExit('Cloudflare no ha confirmat la consulta')
+          bindings={b.get('name'):b.get('type') for b in data.get('result',{}).get('bindings',[])}
+          for name in ('ADMIN_DB','PUSH_SERVICE','PUSH_INTERNAL_TOKEN','GITHUB_CLIENT_ID','GITHUB_CLIENT_SECRET','SESSION_KEY'):
+              print(name+': '+('present' if name in bindings else 'no detectat'))
+          if bindings.get('ADMIN_DB')!='d1':
+              raise SystemExit('ADMIN_DB no detectat com a D1')
+          print('Connexió correcta. No s’ha modificat cap recurs.')
+          PY
