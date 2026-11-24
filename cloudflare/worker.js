@@ -72,8 +72,8 @@ async function localLogin(req,env,origin){
  const dummy={password_salt:b64(new Uint8Array(32)),password_hash:b64(new Uint8Array(32)),password_iterations:600000};
  const valid=await localPasswordMatches(password,c||dummy);
  if(!valid||!c||!c.active||c.role!=='editor')return json({error:'Credencials incorrectes.'},401);
- // No emetre sessions fins a implementar canvi de contrasenya i autorització de totes les rutes.
- return json({error:'Accés local encara no disponible.'},503);
+ const value=await seal({kind:'local',userId:c.user_id,version:c.session_version,exp:Date.now()+4*3600000},env);
+ return respond(JSON.stringify({ok:true,mustChange:!!c.must_change_password}),200,{'Content-Type':'application/json','Set-Cookie':cookie('pbsv_session',value,4*3600)});
  }catch{return json({error:'Servei no disponible.'},503)}
 }
 export default {async fetch(req,env){
@@ -112,7 +112,29 @@ export default {async fetch(req,env){
   if(!LOCAL_LOGIN_ENABLED)return respond('Accés local encara no disponible.',403,{'Set-Cookie':cookie('pbsv_session','',0)});
   try{principal=await localPrincipal(env,s)}catch{return respond('Servei no disponible.',503)}
   if(!principal)return respond('Sessió caducada.',401,{'Set-Cookie':cookie('pbsv_session','',0)});
-  // Until the local dashboard and password change are implemented, only explicitly authorized APIs may proceed.
+  if(path==='/api/auth/password'){
+   const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
+   if(req.method!=='POST')return json({error:'Mètode no permès.'},405);
+   if(req.headers.get('Origin')!==origin||req.headers.get('X-PBSV-Action')!=='change-password')return json({error:'Origen no permès.'},403);
+   let data;try{const raw=await req.text();if(raw.length>2048)return json({error:'Dades incorrectes.'},400);data=JSON.parse(raw)}catch{return json({error:'Dades incorrectes.'},400)}
+   const old=data?.currentPassword,next=data?.newPassword;
+   if(typeof old!=='string'||old.length>128||typeof next!=='string'||next.length<12||next.length>128||old===next)return json({error:'Contrasenya nova incorrecta.'},400);
+   try{
+    const db=env.ADMIN_DB;
+    if(!await reserveLoginAttempt(db,'change:'+principal.id,Math.floor(Date.now()/1000),8))return json({error:'Massa intents.'},429);
+    const c=await db.prepare('SELECT * FROM admin_credentials WHERE user_id=?').bind(principal.id).first();
+    if(!c||!await localPasswordMatches(old,c))return json({error:'Contrasenya actual incorrecta.'},401);
+    const n=await makePasswordCredential(next);
+    // Guard against a concurrent owner reset or deactivation.
+    const result=await db.batch([
+     db.prepare('UPDATE admin_credentials SET password_hash=?,password_salt=?,password_iterations=?,must_change_password=0,updated_at=CURRENT_TIMESTAMP WHERE user_id=? AND password_hash=? AND EXISTS (SELECT 1 FROM admin_users WHERE id=? AND active=1 AND session_version=?)').bind(n.hash,n.salt,n.iterations,principal.id,c.password_hash,principal.id,s.version),
+     db.prepare('UPDATE admin_users SET session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND active=1 AND session_version=? AND EXISTS (SELECT 1 FROM admin_credentials WHERE user_id=? AND password_hash=?)').bind(principal.id,s.version,principal.id,n.hash)
+    ]);
+    if(result.some(r=>r.meta?.changes!==1))return json({error:'Sessió modificada. Torna a entrar.'},409);
+    return respond(JSON.stringify({ok:true}),200,{'Content-Type':'application/json','Set-Cookie':cookie('pbsv_session','',0)});
+   }catch{return json({error:'Servei no disponible.'},503)}
+  }
+  // Until the local dashboard is implemented, only explicitly authorized APIs may proceed.
   if(path!=='/api/publish'&&!path.startsWith('/api/push/'))return respond('Accés denegat.',403);
   if(path.startsWith('/api/push/')&&!localCanNotify(principal))return respond('Accés denegat.',403);
  }
