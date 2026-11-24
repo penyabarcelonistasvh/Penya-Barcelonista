@@ -134,7 +134,14 @@ export default {async fetch(req,env){
     return respond(JSON.stringify({ok:true}),200,{'Content-Type':'application/json','Set-Cookie':cookie('pbsv_session','',0)});
    }catch{return json({error:'Servei no disponible.'},503)}
   }
-  // Until the local dashboard is implemented, only explicitly authorized APIs may proceed.
+  if(path==='/api/me'&&req.method==='GET')return respond(JSON.stringify({authenticated:true,login:principal.username,role:'editor',permissions:[...principal.permissions],mustChange:principal.mustChange}),200,{'Content-Type':'application/json'});
+  // Keep local sessions isolated from owner-only handlers.
+  if(path==='/'&&req.method==='GET'){
+   const modules=[['news','Notícies'],['matches','Partits'],['notifications','Notificacions'],['teams','Equips'],['sponsors','Patrocinadors'],['club','Club']];
+   const escapeHtml=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+   const body=principal.mustChange?'<p>Cal canviar la contrasenya abans de continuar.</p>':'<p>Mòduls autoritzats:</p><ul>'+modules.filter(([key])=>principal.permissions.has(key)).map(([,label])=>'<li>'+label+'</li>').join('')+'</ul><p>Els editors encara estan en preparació.</p>';
+   return respond('<!doctype html><html lang="ca"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administració PBSV</title><body style="font:16px system-ui;max-width:640px;margin:40px auto;padding:20px"><h1>Administració de la Penya</h1><p>Usuari: '+escapeHtml(principal.displayName)+'</p>'+body+'<a href="/auth/logout">Tancar sessió</a></body></html>',200,{'Content-Type':'text/html;charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'"});
+  }
   if(path!=='/api/publish'&&!path.startsWith('/api/push/'))return respond('Accés denegat.',403);
   if(path.startsWith('/api/push/')&&!localCanNotify(principal))return respond('Accés denegat.',403);
  }
