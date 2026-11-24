@@ -64,7 +64,7 @@ export default {async fetch(req,env){
    const db=env.ADMIN_DB;
    if(req.method==='GET'){
     if(userId)return json({error:'Ruta no disponible.'},404);
-    const users=await db.prepare('SELECT id,email,display_name,role,active,created_at FROM admin_users ORDER BY created_at DESC').all();
+    const users=await db.prepare('SELECT u.id,u.email,u.display_name,u.role,u.active,u.created_at,c.username FROM admin_users u LEFT JOIN admin_credentials c ON c.user_id=u.id ORDER BY u.created_at DESC').all();
     const grants=await db.prepare('SELECT user_id,permission FROM admin_permissions').all();
     return json({users:(users.results||[]).map(u=>({...u,active:!!u.active,permissions:(grants.results||[]).filter(p=>p.user_id===u.id).map(p=>p.permission)}))});
    }
@@ -72,13 +72,22 @@ export default {async fetch(req,env){
    let data;try{data=JSON.parse(raw)}catch{return json({error:'JSON incorrecte.'},400)}
    if(req.method==='POST'){
     if(userId)return json({error:'Ruta incorrecta.'},404);
-    const email=String(data?.email||'').trim().toLowerCase(),name=String(data?.display_name||'').trim();
+    const username=String(data?.username||'').trim().toLowerCase(),password=data?.password;
+    const local=!!username||password!==undefined;
+    if(local&&(!/^[a-z0-9][a-z0-9._-]{2,39}$/.test(username)||typeof password!=='string'||password.length<12||password.length>128))return json({error:'Usuari incorrecte o contrasenya de menys de 12 caràcters.'},400);
+    const email=local?username+'@local.invalid':String(data?.email||'').trim().toLowerCase(),name=String(data?.display_name||'').trim();
     const grants=data?.permissions??['news','matches','notifications'];
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||!name||name.length>120)return json({error:'Nom o correu incorrectes.'},400);
     if(!Array.isArray(grants)||grants.length>permissions.length||new Set(grants).size!==grants.length||grants.some(p=>!permissions.includes(p)))return json({error:'Permisos incorrectes.'},400);
     const id=crypto.randomUUID();
     // Els comptes nous queden inactius fins que s'implementi la verificació del correu.
     const queries=[db.prepare("INSERT INTO admin_users (id,email,display_name,role,active) VALUES (?,?,?,'editor',0)").bind(id,email,name),...grants.map(p=>db.prepare('INSERT INTO admin_permissions (user_id,permission) VALUES (?,?)').bind(id,p))];
+    if(local){
+     const salt=crypto.getRandomValues(new Uint8Array(32)),iterations=600000;
+     const material=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
+     const hash=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},material,256);
+     queries.push(db.prepare('INSERT INTO admin_credentials (user_id,username,password_hash,password_salt,password_iterations) VALUES (?,?,?,?,?)').bind(id,username,b64(new Uint8Array(hash)),b64(salt),iterations));
+    }
     await db.batch(queries);
     return json({ok:true,id,active:false,invitation_sent:false},201);
    }
