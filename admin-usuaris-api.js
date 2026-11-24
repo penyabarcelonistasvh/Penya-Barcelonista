@@ -6,12 +6,14 @@ const state=document.getElementById('adminApiStatus');
 const create=document.getElementById('createAdmin');
 const nameField=document.getElementById('adminName');
 const emailField=document.getElementById('adminEmail');
+const passwordField=document.getElementById('adminPassword');
+let local=false;
 let ready=false;
 const safe=t=>document.createTextNode(String(t));
 function message(t){state.textContent=t;}
 function row(u){
  const box=document.createElement('article');box.className='panel';
- const heading=document.createElement('h3');heading.append(safe(u.display_name+' · '+u.email));box.append(heading);
+ const heading=document.createElement('h3');heading.append(safe(u.display_name+' · '+(u.username||u.email)));box.append(heading);
  const status=document.createElement('p');status.append(safe(u.active?'Compte actiu':'Compte inactiu · encara no pot entrar'));box.append(status);
  if(u.role==='owner')return box;
  const choices=document.createElement('div');choices.className='permissions';
@@ -39,20 +41,21 @@ async function load(){
  const data=await r.json().catch(()=>({}));
  if(!r.ok)throw Error(data.error||'El servei encara no està disponible.');
  if(!Array.isArray(data.users))throw Error('Resposta inesperada del servidor.');
- ready=true;nameField.disabled=false;emailField.disabled=false;create.disabled=false;
+ local=data.local_credentials===true;
+ ready=local;nameField.disabled=!local;emailField.disabled=!local;if(passwordField)passwordField.disabled=!local;create.disabled=!local;
  create.textContent='Desar administrador inactiu';
  list.replaceChildren();data.users.forEach(u=>list.append(row(u)));
  if(!data.users.length){const p=document.createElement('p');p.textContent='Encara no hi ha administradors registrats.';list.append(p)}
- message('Base de dades connectada. Els comptes nous es creen inactius fins a habilitar la verificació per correu.');
- }catch(e){ready=false;create.disabled=true;nameField.disabled=true;emailField.disabled=true;message('Gestió pendent d’activació: '+e.message)}
+ message(local?'Base de dades connectada. Els comptes nous es desen inactius fins a habilitar l’accés.':'Base de dades connectada. Pendent del desplegament de credencials locals.');
+ }catch(e){ready=false;create.disabled=true;nameField.disabled=true;emailField.disabled=true;if(passwordField)passwordField.disabled=true;message('Gestió pendent d’activació: '+e.message)}
 }
 create.addEventListener('click',async()=>{if(!ready)return;
- const display_name=nameField.value.trim(),email=emailField.value.trim();
- if(!display_name||!emailField.validity.valid||!email){message('Introdueix un nom i un correu vàlids.');return}
+ const display_name=nameField.value.trim(),username=emailField.value.trim().toLowerCase(),password=passwordField?.value;
+ if(!display_name||!/^[a-z0-9][a-z0-9._-]{2,39}$/.test(username)||!password||password.length<12||password.length>128){message('Introdueix un nom, un usuari vàlid i una contrasenya de 12 a 128 caràcters.');return}
  create.disabled=true;
  try{const permissions=fields.filter(x=>x.checked).map(x=>x.dataset.permission);
- const r=await fetch('./api/admin/users',{method:'POST',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({display_name,email,permissions})});
+ const r=await fetch('./api/admin/users',{method:'POST',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({display_name,username,password,permissions})});
  const data=await r.json();if(!r.ok)throw Error(data.error||'No s’ha pogut crear el compte.');
- nameField.value='';emailField.value='';await load();message('Administrador desat com a inactiu. Encara no s’ha enviat cap invitació.');
- }catch(e){message(e.message)}finally{create.disabled=!ready}});
+ nameField.value='';emailField.value='';passwordField.value='';await load();message('Administrador desat com a inactiu.');
+ }catch(e){message(e.message)}finally{if(passwordField)passwordField.value='';create.disabled=!ready}});
 load();
