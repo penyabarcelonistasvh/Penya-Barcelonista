@@ -19,12 +19,12 @@ button:disabled{opacity:.55;cursor:not-allowed}.help{font-size:13px}.back{displa
 </style></head><body>
 <header><a href="./admin.html">← PBSV · Panell d'administració</a></header>
 <main><h1>👥 Gestió d'administradors</h1><p>Configura qui podrà gestionar cada apartat de l'aplicació.</p>
-<div class="status" role="status"><strong>Mòdul en preparació — encara no es poden crear comptes.</strong><p>Falta connectar la base de dades privada i activar l'accés per correu al servidor. Pots provar els permisos visualment, però no es desen dades ni es concedeixen accessos.</p></div>
+<div class="status" role="status"><strong>Gestió de comptes · activació per correu pendent.</strong><p>Els comptes es poden desar quan el servidor confirma la connexió. No es concedeixen accessos fins a activar la verificació per correu.</p></div>
 <section class="panel"><h2>Administrador principal</h2><div class="owner"><div><strong>Compte propietari de la Penya</strong><p>Accés actual amb GitHub · tots els permisos</p></div><span class="pill">Control total</span></div></section>
-<section class="panel"><h2>Nou administrador</h2><p>Quan el sistema estigui actiu, podràs introduir un correu, activar permisos i enviar una invitació segura.</p>
+<section class="panel"><h2>Nou administrador</h2><p>Introdueix el nom, el correu i els permisos. El compte quedarà inactiu fins a habilitar les invitacions.</p>
 <label class="field" for="adminName">Nom</label><input id="adminName" type="text" placeholder="Nom de l'administrador" disabled>
 <label class="field" for="adminEmail">Correu electrònic</label><input id="adminEmail" type="email" placeholder="nom@exemple.cat" disabled>
-<h2 style="margin-top:24px">Permisos inicials previstos</h2>
+<h2 style="margin-top:24px">Permisos inicials</h2>
 <div class="permissions">
 <label class="permission"><input type="checkbox" data-permission="news" checked> 📰 Notícies</label>
 <label class="permission"><input type="checkbox" data-permission="matches" checked> 📅 Partits i cartells</label>
@@ -33,11 +33,11 @@ button:disabled{opacity:.55;cursor:not-allowed}.help{font-size:13px}.back{displa
 <label class="permission"><input type="checkbox" data-permission="sponsors"> 🤝 Patrocinadors</label>
 <label class="permission"><input type="checkbox" data-permission="club"> 🏟️ Informació del club</label>
 <label class="permission"><input type="checkbox" disabled> 🔐 Gestionar administradors</label>
-</div><p class="help">Pots marcar i desmarcar els permisos per veure com funcionarà. Aquesta prova no desa els canvis. Els administradors nous no podran concedir-se permisos a si mateixos.</p>
-<button type="button" disabled aria-describedby="activationNote">Crear administrador (pendent d'activació)</button><p id="activationNote" class="help">La creació romandrà bloquejada fins que el servidor verifiqui la identitat i els permisos.</p>
+</div><p class="help">Selecciona els permisos que vols assignar al compte. Els administradors nous no podran concedir-se permisos a si mateixos.</p>
+<button id="createAdmin" type="button" disabled aria-describedby="activationNote">Crear administrador (pendent d'activació)</button><p id="activationNote" class="help">La creació romandrà bloquejada fins que el servidor verifiqui la identitat i els permisos.</p>
 <p id="permissionSummary" class="help" aria-live="polite"></p></section><section aria-labelledby="existingTitle"><h2 id="existingTitle">Administradors registrats</h2><p id="adminApiStatus" role="status" aria-live="polite">Comprovant connexió segura…</p><div id="adminUserList"></div></section><a class="back" href="./admin.html">← Tornar al panell</a></main><script>
 const labels=[...document.querySelectorAll('.permission')];
 const summary=document.getElementById('permissionSummary');
-function refresh(){const selected=labels.filter(label=>label.querySelector('input').checked).map(label=>label.textContent.trim());summary.textContent='Permisos seleccionats a la demostració ('+selected.length+'): '+(selected.join(', ')||'Cap')+'. No s\'han desat canvis.';}
+function refresh(){const selected=labels.filter(label=>label.querySelector('input').checked).map(label=>label.textContent.trim());summary.textContent='Permisos seleccionats ('+selected.length+'): '+(selected.join(', ')||'Cap')+'.';}
 labels.forEach(label=>label.querySelector('input').addEventListener('change',refresh));refresh();
-</script><script src="./admin-usuaris-api.js?v=1" defer></script></body></html>
+</script><script src="./admin-usuaris-api.js?v=2" defer></script></body></html>
