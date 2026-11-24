@@ -25,6 +25,9 @@ async function localPrincipal(env,s){
  const grants=await env.ADMIN_DB.prepare('SELECT permission FROM admin_permissions WHERE user_id=?').bind(u.id).all();
  return {id:u.id,username:u.username,displayName:u.display_name,mustChange:!!u.must_change_password,permissions:new Set((grants.results||[]).map(x=>x.permission).filter(x=>['news','matches','notifications','teams','sponsors','club'].includes(x)))};
 }
+function localCanNotify(principal){
+ return !!principal&&!principal.mustChange&&principal.permissions.has('notifications');
+}
 function localCanPublish(principal,file){
  return !!principal&&!principal.mustChange&&Object.hasOwn(FILE_PERMISSION,file)&&principal.permissions.has(FILE_PERMISSION[file]);
 }
@@ -104,8 +107,14 @@ export default {async fetch(req,env){
  if(path==='/auth/logout')return respond(null,302,{'Location':origin+'/','Set-Cookie':cookie('pbsv_session','',0)});
  const s=await session(req,env);
  // Fail closed: local sessions must never fall through to owner-only handlers.
+ let principal=null;
  if(s?.kind==='local'){
-  return respond(JSON.stringify({error:'Accés local encara no disponible.'}),403,{'Content-Type':'application/json','Set-Cookie':cookie('pbsv_session','',0)});
+  if(!LOCAL_LOGIN_ENABLED)return respond('Accés local encara no disponible.',403,{'Set-Cookie':cookie('pbsv_session','',0)});
+  try{principal=await localPrincipal(env,s)}catch{return respond('Servei no disponible.',503)}
+  if(!principal)return respond('Sessió caducada.',401,{'Set-Cookie':cookie('pbsv_session','',0)});
+  // Until the local dashboard and password change are implemented, only explicitly authorized APIs may proceed.
+  if(path!=='/api/publish'&&!path.startsWith('/api/push/'))return respond('Accés denegat.',403);
+  if(path.startsWith('/api/push/')&&!localCanNotify(principal))return respond('Accés denegat.',403);
  }
  if(path==='/api/me')return respond(JSON.stringify({authenticated:!!s,login:s?.login||null}),200,{'Content-Type':'application/json'});
 
@@ -182,8 +191,10 @@ export default {async fetch(req,env){
  if(path==='/api/push/subscribers'&&req.method==='GET'){
   const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
   if(!s)return json({error:'Inicia sessió amb GitHub.'},401);
+  if(!principal){
   const identityResponse=await github('/user',s.token);if(!identityResponse.ok)return json({error:'Sessió caducada.'},401);
   const identity=await identityResponse.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return json({error:'Accés denegat.'},403);
+  }
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return json({error:'Connexió privada no configurada.'},503);
   try{const r=await env.PUSH_SERVICE.fetch('https://pbsv-push.internal/api/push/admin/subscribers',{headers:{Authorization:'Bearer '+env.PUSH_INTERNAL_TOKEN}});return respond(await r.text(),r.status,{'Content-Type':'application/json'})}
   catch{return json({error:'No es poden consultar els dispositius.'},502)}
@@ -191,8 +202,10 @@ export default {async fetch(req,env){
  if((path==='/api/push/batches'||path==='/api/push/audience')&&req.method==='GET'){
   const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
   if(!s)return json({error:'Inicia sessió amb GitHub.'},401);
+  if(!principal){
   const identityResponse=await github('/user',s.token);if(!identityResponse.ok)return json({error:'Sessió caducada.'},401);
   const identity=await identityResponse.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return json({error:'Accés denegat.'},403);
+  }
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return json({error:'Connexió privada no configurada.'},503);
   try{const r=await env.PUSH_SERVICE.fetch('https://pbsv-push.internal/api/push/admin/'+(path.endsWith('/audience')?'audience':'batches'),{headers:{Authorization:'Bearer '+env.PUSH_INTERNAL_TOKEN}});return respond(await r.text(),r.status,{'Content-Type':'application/json'})}
   catch{return json({error:'No es pot consultar la cua.'},502)}
@@ -203,8 +216,10 @@ export default {async fetch(req,env){
   const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
   if(method==='POST'&&(req.headers.get('Origin')!==origin||req.headers.get('X-PBSV-Action')!=='push-schedule'))return json({error:'Origen no permès'},403);
   if(!s)return json({error:'Inicia sessió amb GitHub.'},401);
+  if(!principal){
   const identityResponse=await github('/user',s.token);if(!identityResponse.ok)return json({error:'Sessió GitHub caducada.'},401);
   const identity=await identityResponse.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return json({error:'Accés denegat.'},403);
+  }
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return json({error:'Connexió privada no configurada.'},503);
   let payload;
   if(method==='POST'){try{const raw=await req.text();if(raw.length>4096)return json({error:'Dades massa grans'},413);payload=JSON.parse(raw)}catch{return json({error:'JSON incorrecte'},400)}}
@@ -219,10 +234,12 @@ export default {async fetch(req,env){
   if(sending&&(req.headers.get('Origin')!==origin||req.headers.get('X-PBSV-Action')!=='push-send'))return respond('Forbidden',403);
   const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
   if(!s)return json({error:'Inicia sessió amb GitHub.'},401);
+  if(!principal){
   const identityResponse=await github('/user',s.token);
   if(!identityResponse.ok)return json({error:'Sessió GitHub caducada.'},401);
   const identity=await identityResponse.json();
   if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return json({error:'Accés denegat.'},403);
+  }
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return json({error:'Connexió privada PUSH_SERVICE no configurada.'},503);
   let payload=null;
   if(sending){try{const raw=await req.text();if(raw.length>4096)return json({error:'Dades massa grans.'},413);payload=JSON.parse(raw)}catch{return json({error:'JSON incorrecte.'},400)}}
@@ -235,10 +252,12 @@ export default {async fetch(req,env){
   if(req.method!=='POST')return respond('Method not allowed',405);
   if(req.headers.get('Origin')!==origin||req.headers.get('X-PBSV-Action')!=='push-test')return respond('Forbidden',403);
   if(!s)return respond(JSON.stringify({error:'Inicia sessió amb GitHub.'}),401,{'Content-Type':'application/json'});
+  if(!principal){
   const identityResponse=await github('/user',s.token);
   if(!identityResponse.ok)return respond(JSON.stringify({error:'Sessió GitHub caducada.'}),401,{'Content-Type':'application/json'});
   const identity=await identityResponse.json();
   if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return respond(JSON.stringify({error:'Accés denegat.'}),403,{'Content-Type':'application/json'});
+  }
   if(!env.PUSH_SERVICE||!env.PUSH_INTERNAL_TOKEN)return respond(JSON.stringify({error:!env.PUSH_SERVICE?'Falta el Service Binding PUSH_SERVICE al Worker pbsv-admin.':'Falta el secret PUSH_INTERNAL_TOKEN al Worker pbsv-admin.'}),503,{'Content-Type':'application/json'});
   let data;try{data=await req.json()}catch{return respond(JSON.stringify({error:'JSON incorrecte.'}),400,{'Content-Type':'application/json'})}
   const title=String(data?.title||'').trim(),body=String(data?.body||'').trim();
@@ -260,14 +279,21 @@ export default {async fetch(req,env){
   const file=payload?.file,content=payload?.content;
   if(!ALLOWED.has(file)||typeof content!=='string'||content.length>1500000)return respond('Dades no permeses.',400);
   try{const parsed=JSON.parse(content);const collections={'equips.json':'teams','club.json':'sections','noticies.json':'noticias','patrocinadors.json':'sponsors'};if(file==='partits-cap-setmana.json' ? !(parsed.saturday&&typeof parsed.saturday==='object'&&parsed.sunday&&typeof parsed.sunday==='object') : file==='proxims-partits.json' ? !(Array.isArray(parsed.matches)&&parsed.matches.every(m=>m&&typeof m.team==='string'&&typeof m.date==='string'&&typeof m.time==='string'&&typeof m.opponent==='string'&&typeof m.venue==='string'&&typeof m.home==='boolean')) : !Array.isArray(parsed[collections[file]]))return respond('Format de dades incorrecte.',400)}catch{return respond('JSON incorrecte.',400)}
-  const user=await github('/user',s.token);if(!user.ok)return respond('Sessió GitHub caducada.',401);
-  const identity=await user.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return respond('Accés denegat.',403);
+  let publishToken=s.token;
+  if(principal){
+   if(!localCanPublish(principal,file))return respond('Accés denegat.',403);
+   if(!env.ADMIN_PUBLISH_TOKEN)return respond('Publicació local encara no configurada.',503);
+   publishToken=env.ADMIN_PUBLISH_TOKEN;
+  }else{
+   const user=await github('/user',s.token);if(!user.ok)return respond('Sessió GitHub caducada.',401);
+   const identity=await user.json();if(identity.login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return respond('Accés denegat.',403);
+  }
   const api='/repos/'+OWNER+'/'+REPO+'/contents/data/'+file;
-  const current=await github(api,s.token);if(!current.ok)return respond('No es pot llegir el fitxer a GitHub.',502);
+  const current=await github(api,publishToken);if(!current.ok)return respond('No es pot llegir el fitxer a GitHub.',502);
   const metadata=await current.json();
   const bytes=encoder.encode(content);if(bytes.length>1100000)return respond('Fitxer massa gran.',413);
   const encoded=b64(bytes).replace(/-/g,'+').replace(/_/g,'/');const padded=encoded+'='.repeat((4-encoded.length%4)%4);
-  const save=await github(api,s.token,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Actualitzar '+file+' des de l’administració PBSV',content:padded,sha:metadata.sha,branch:'main'})});
+  const save=await github(api,publishToken,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Actualitzar '+file+' des de l’administració PBSV',content:padded,sha:metadata.sha,branch:'main'})});
   if(!save.ok)return respond(save.status===409?'Conflicte: el fitxer ha canviat. Recarrega abans de publicar.':'GitHub ha rebutjat la publicació ('+save.status+').',save.status===409?409:502);
   const out=await save.json();
   return respond(JSON.stringify({ok:true,commit:out.commit?.sha}),200,{'Content-Type':'application/json'});
