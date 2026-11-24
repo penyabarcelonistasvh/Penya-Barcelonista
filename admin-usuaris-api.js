@@ -54,7 +54,7 @@ create.addEventListener('click',async()=>{if(!ready)return;
  if(!display_name||!/^[a-z0-9][a-z0-9._-]{2,39}$/.test(username)||!password||password.length<12||password.length>128){message('Introdueix un nom, un usuari vàlid i una contrasenya de 12 a 128 caràcters.');return}
  create.disabled=true;
  try{const permissions=fields.filter(x=>x.checked).map(x=>x.dataset.permission);
- const r=await fetch('./api/admin/users',{method:'POST',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({display_name,username,password,permissions})});
+ const r=await fetch('./api/admin/users',{method:'POST',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({display_name,username,password,permissions,must_change_password:document.getElementById('mustChangePassword')?.checked!==false})});
  const data=await r.json();if(!r.ok)throw Error(data.error||'No s’ha pogut crear el compte.');
  nameField.value='';emailField.value='';passwordField.value='';await load();message('Administrador desat com a inactiu.');
  }catch(e){message(e.message)}finally{if(passwordField)passwordField.value='';create.disabled=!ready}});
