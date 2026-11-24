@@ -34,7 +34,19 @@ function row(u){
  disable.disabled=!u.active;
  disable.addEventListener('click',async()=>{if(!confirm('Vols desactivar aquest administrador?'))return;
  try{const r=await fetch('./api/admin/users/'+encodeURIComponent(u.id),{method:'PATCH',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({active:false})});const j=await r.json();if(!r.ok)throw Error(j.error||'Error');await load()}catch(e){message(e.message)}});
- box.append(disable);return box;
+ box.append(disable);
+ const reset=document.createElement('button');reset.type='button';reset.style.marginLeft='10px';reset.textContent='Restablir contrasenya';
+ reset.addEventListener('click',()=>{
+  if(box.querySelector('.password-reset'))return;
+  const form=document.createElement('div');form.className='password-reset';
+  const password=document.createElement('input');password.type='password';password.autocomplete='new-password';password.placeholder='Nova contrasenya';password.minLength=12;password.maxLength=128;
+  const label=document.createElement('label');const force=document.createElement('input');force.type='checkbox';force.checked=true;label.append(force,safe(' Cal canviar la contrasenya en entrar'));
+  const submit=document.createElement('button');submit.type='button';submit.textContent='Desar contrasenya';
+  const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Cancel·lar';cancel.addEventListener('click',()=>{password.value='';form.remove()});
+  submit.addEventListener('click',async()=>{if(password.value.length<12||password.value.length>128){message('Contrasenya de 12 a 128 caràcters requerida.');return}submit.disabled=true;
+   try{const r=await fetch('./api/admin/users/'+encodeURIComponent(u.id),{method:'PATCH',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({password:password.value,must_change_password:force.checked})});const j=await r.json();if(!r.ok)throw Error(j.error||'Error');await load();message('Contrasenya actualitzada. Les sessions anteriors han quedat revocades.')}catch(e){message(e.message)}finally{password.value='';submit.disabled=false}});
+  form.append(password,label,submit,cancel);box.append(form);password.focus();
+ });box.append(reset);return box;
 }
 async function load(){
  try{const r=await fetch('./api/admin/users',{cache:'no-store'});
