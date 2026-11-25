@@ -13,7 +13,7 @@ DATA = {
     "proxims-partits.json": {"version": 1, "source": "", "note": "", "matches": []},
     "partits-cap-setmana.json": {"version": 1, "saturday": DAY, "sunday": DAY},
     "directe-cap-setmana.json": {"version": 1, "enabled": False, "source": "", "updatedAt": None, "matches": []},
-    "historia-club.json": {"chapters": [], "values": {"ca": [], "es": []}},
+    "historia-club.json": {"chapters": [], "values": {"ca": [], "es": []}, "copy": {"history": {"ca": "", "es": ""}, "values": {"ca": "", "es": ""}, "footer": {"ca": "", "es": ""}}},
     "club.json": {"version": 1, "sections": [
         {"id": key, "name": name, "content": "", "url": "", "detail": detail}
         for key, name, detail in [
