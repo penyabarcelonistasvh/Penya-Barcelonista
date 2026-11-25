@@ -10,3 +10,8 @@ service = "pbsv-push"
 
 # Les credencials OAuth i la clau de sessió es gestionen a Cloudflare.
 # keep_vars evita que els desplegaments de GitHub sobreescriguin les variables.
+
+[[d1_databases]]
+binding = "ADMIN_DB"
+database_name = "pbsv-admin-db"
+database_id = "524a30f0-b842-45b4-ad05-f3948f281601"
