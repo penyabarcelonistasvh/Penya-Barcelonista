@@ -22,3 +22,18 @@ img{max-width:100%;height:auto}
 .pbsv-preview-wrap .pbsv-preview-items>.item{background:white;border:1px solid #dce4f0;border-radius:10px;padding:12px;min-width:0}
 .pbsv-preview-wrap img{max-width:180px;max-height:130px;object-fit:contain}
 @media(max-width:640px){main{padding:14px 12px!important}section,.panel{padding:16px!important;margin:14px 0!important;border-radius:14px}h1{font-size:1.65rem;line-height:1.2}h2{font-size:1.3rem}button,.btn,.pbsv-preview-toggle{min-height:48px}input,textarea,select{font-size:16px!important}.toolbar{align-items:stretch}.toolbar input{min-width:0;width:100%}.person-row{grid-template-columns:minmax(0,1fr)!important}.person-row button{width:100%}img{max-width:100%}.news-preview{flex-wrap:wrap}.news-preview img{max-width:100%;height:auto}input[type=file]{width:100%}}
+
+/* Sistema visual comú dels editors; conserva els colors de les accions de risc. */
+body{background:#f3f6fb;color:#182845}
+main h1{letter-spacing:-.025em;line-height:1.2}
+main :is(section,.panel){border-radius:14px}
+main :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select){border-radius:9px;border-color:#b8c6dc}
+main :is(button,.btn){border-radius:9px;font-weight:700}
+main button.secondary{background:#e7edf7;color:#153769}
+main button.danger{background:#a50044;color:#fff}
+main button[type=submit]:not(.secondary):not(.danger){background:#174b9d;color:#fff}
+main label{line-height:1.5}
+main :is(.toolbar,.actions){gap:10px}
+main :is(section,.panel){scroll-margin-top:80px}
+@media(min-width:901px){body:has(.portal-nav)>main{width:calc(100% - 238px);min-width:0}}
+@media(max-width:640px){main :is(.toolbar,.actions){flex-wrap:wrap}main :is(.toolbar,.actions)>button{max-width:100%;white-space:normal}}
