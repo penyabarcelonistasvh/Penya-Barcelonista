@@ -160,7 +160,7 @@ export default {async fetch(req,env){
   const identity=await github('/user',s.token);
   if(!identity.ok)return respond('Sessió caducada.',401);
   if((await identity.json()).login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return respond('Accés denegat.',403);
-  try{const rows=await env.ADMIN_DB.prepare("SELECT actor_email AS actor,action,target,result,created_at FROM admin_audit ORDER BY created_at DESC,id DESC LIMIT 30").all();return respond(JSON.stringify({activity:rows.results||[]}),200,{'Content-Type':'application/json'})}catch{return respond('Historial no disponible.',503)}
+  try{const rows=await env.ADMIN_DB.prepare("SELECT a.actor_email AS actor,a.action,a.target,a.result,a.created_at,CASE WHEN a.action IN ('user_create','user_enable','user_disable','password_reset','permissions_update') THEN COALESCE(c.username,u.display_name,a.target) ELSE a.target END AS target_label FROM admin_audit a LEFT JOIN admin_users u ON u.id=a.target LEFT JOIN admin_credentials c ON c.user_id=u.id ORDER BY a.created_at DESC,a.id DESC LIMIT 30").all();return respond(JSON.stringify({activity:rows.results||[]}),200,{'Content-Type':'application/json'})}catch{return respond('Historial no disponible.',503)}
  }
  if(path==='/api/admin/users'||path.startsWith('/api/admin/users/')){
   const json=(data,status=200)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
