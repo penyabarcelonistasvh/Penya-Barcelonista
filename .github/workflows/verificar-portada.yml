@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - 'index.html'
+      - 'club-brand.js'
+      - 'manifest.webmanifest'
+      - 'scripts/generate-manifest.mjs'
       - '.github/workflows/verificar-portada.yml'
   workflow_dispatch:
 permissions:
@@ -12,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verificar coherència del manifest PWA
+        run: node scripts/generate-manifest.mjs
       - name: Comprobar que la portada no esté vacía ni truncada
         run: |
           python3 - <<'PY'
