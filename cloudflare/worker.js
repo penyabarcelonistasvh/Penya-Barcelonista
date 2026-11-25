@@ -33,7 +33,7 @@ function localCanPublish(principal,file){
  return !!principal&&!principal.mustChange&&Object.hasOwn(FILE_PERMISSION,file)&&principal.permissions.has(FILE_PERMISSION[file]);
 }
 async function makePasswordCredential(password){
- const salt=crypto.getRandomValues(new Uint8Array(32)),iterations=600000;
+ const salt=crypto.getRandomValues(new Uint8Array(32)),iterations=100000;
  const material=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
  const hash=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},material,256);
  return {hash:b64(new Uint8Array(hash)),salt:b64(salt),iterations};
@@ -42,7 +42,7 @@ async function localPasswordMatches(password,credential){
  const salt=unb64(credential.password_salt);
  const expected=unb64(credential.password_hash);
  const iterations=credential.password_iterations;
- if(salt.length!==32||expected.length!==32||iterations!==600000)return false;
+ if(salt.length!==32||expected.length!==32||![100000,600000].includes(iterations))return false;
  const material=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
  const actual=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},material,256));
  let diff=0;for(let i=0;i<32;i++)diff|=actual[i]^expected[i];return diff===0;
@@ -70,7 +70,7 @@ async function localLogin(req,env,origin){
  const ipHash=b64(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(ip))));
  if(!await reserveLoginAttempt(db,'ip:'+ipHash,now,30)||!await reserveLoginAttempt(db,'user:'+username,now,8))return json({error:'Massa intents. Torna-ho a provar més tard.'},429);
  const c=await db.prepare("SELECT c.*,u.active,u.role,u.session_version FROM admin_credentials c JOIN admin_users u ON u.id=c.user_id WHERE c.username=?").bind(username).first();
- const dummy={password_salt:b64(new Uint8Array(32)),password_hash:b64(new Uint8Array(32)),password_iterations:600000};
+ const dummy={password_salt:b64(new Uint8Array(32)),password_hash:b64(new Uint8Array(32)),password_iterations:100000};
  const valid=await localPasswordMatches(password,c||dummy);
  if(!valid||!c||!c.active||c.role!=='editor')return json({error:'Credencials incorrectes.'},401);
  const value=await seal({kind:'local',userId:c.user_id,version:c.session_version,exp:Date.now()+4*3600000},env);
@@ -234,7 +234,10 @@ export default {async fetch(req,env){
  if(data?.active===false)await auditAdmin(env,null,'user_disable',userId);
    return json({ok:true,active:false});
   }catch(e){
-   return json({error:'No s’ha pogut completar l’operació. Comprova la configuració de D1.'},503);
+   const detail=String(e?.message||'');
+   const reason=/unique constraint/i.test(detail)?'El nom d’usuari ja existeix.':/iteration|PBKDF2/i.test(detail)?'Error en generar les credencials.':/no such table|no such column/i.test(detail)?'Esquema D1 incompatible.':/constraint/i.test(detail)?'Restricció de dades D1.':'No s’ha pogut completar l’operació.';
+   console.error('PBSV admin users:',reason);
+   return json({error:reason},/unique constraint/i.test(detail)?409:503);
   }
  }
  if(path==='/api/push/subscribers'&&req.method==='GET'){
