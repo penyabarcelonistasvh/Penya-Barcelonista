@@ -36,3 +36,7 @@ Aquesta llista és un inventari inicial, no una garantia que no existeixin altre
 6. Publicar després de l'acceptació del club.
 
 No executar desplegaments de prova contra els recursos de producció de la Penya. No exportar les bases de dades de producció per crear una instal·lació nova.
+
+## Comprovació local obligatòria abans del desplegament nou
+
+Executar `python3 scripts/validar-nou-club.py` des del repositori nou. Un resultat 1 bloqueja el procediment fins a revisar les coincidències. A la Penya original és normal que falli. No imprimeix els valors trobats, només fitxer, línia i tipus. No comprova secrets remots, permisos, dades personals ni recursos Cloudflare; cal revisar-los separadament. No s'executa automàticament en producció.
