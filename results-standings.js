@@ -5,6 +5,7 @@ const favoritesSection=document.getElementById('resultsFavoritesSection'),favori
 const favoritesTitle=document.getElementById('resultsFavoritesTitle'),favoritesHelp=document.getElementById('resultsFavoritesHelp'),nextMatches=document.getElementById('resultsNextMatches');
 if(!grid||!count||!filters||!search||!onlyButton||!favoritesSection||!favoritesGrid||!nextMatches)return;
 let teams=[],matches=[],selected='all',onlyFavorites=false,loadError=false;
+const federation=window.PBSV_BRAND?.sports||{provider:'FCF',allowedHosts:['www.fcf.cat']};
 const STORAGE_KEY='pbsv-results-favorites-v1';
 let favorites=[];
 try{const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');if(Array.isArray(stored))favorites=stored.filter(x=>typeof x==='string').slice(0,100)}catch(_){}
@@ -12,7 +13,7 @@ const es=()=>document.documentElement.lang==='es';
 const tr=(ca,cast)=>es()?cast:ca;
 const groupNames={masc:['Masculí','Masculino'],fem:['Femení','Femenino'],genuine:['Genuïns','Genuinos']};
 const norm=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-function validUrl(value){try{const url=new URL(value);return url.protocol==='https:'&&url.hostname==='www.fcf.cat'}catch{return false}}
+function validUrl(value){try{const url=new URL(value);return url.protocol==='https:'&&federation.allowedHosts.includes(url.hostname)}catch{return false}}
 function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(favorites))}catch(_){}}
 function toggle(name){favorites=favorites.includes(name)?favorites.filter(x=>x!==name):[...favorites,name];save();render()}
 function futureMatch(team){
@@ -41,8 +42,8 @@ function cardFor(team){
  star.setAttribute('aria-label',(active?tr('Treure dels favorits: ','Quitar de favoritos: '):tr('Afegir als favorits: ','Añadir a favoritos: '))+team.name);
  star.title=star.getAttribute('aria-label');star.addEventListener('click',()=>toggle(team.name));titleRow.append(star);
  if(validUrl(team.url)){
-  const link=document.createElement('a');link.href=team.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=tr('Veure FCF ↗','Ver FCF ↗');
-  link.setAttribute('aria-label',tr('Consultar resultats i classificació de ','Consultar resultados y clasificación de ')+team.name+' (FCF)');
+  const link=document.createElement('a');link.href=team.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=tr('Veure ','Ver ')+federation.provider+' ↗';
+  link.setAttribute('aria-label',tr('Consultar resultats i classificació de ','Consultar resultados y clasificación de ')+team.name+' ('+federation.provider+')');
   actions.append(link);
  }else{const pending=document.createElement('span');pending.className='results-pending';pending.textContent=tr('Enllaç pendent','Enlace pendiente');actions.append(pending)}
  card.append(actions);return card;
@@ -66,7 +67,7 @@ function render(){
   const upcoming=chosen.filter(team=>futureMatch(team));
   const heading=document.createElement('strong');heading.textContent=tr('Pròxims partits dels meus equips','Próximos partidos de mis equipos');nextMatches.append(heading);
   const note=document.createElement('div');note.style.marginTop='7px';
-  note.textContent=upcoming.length?tr('Dades dels cartells oficials de la Penya. Confirma possibles canvis amb el club.','Datos de los carteles oficiales de la Penya. Confirma posibles cambios con el club.'):tr('Encara no hi ha propers partits publicats per als teus favorits.','Todavía no hay próximos partidos publicados para tus favoritos.');
+  note.textContent=upcoming.length?tr('Dades dels cartells oficials del club. Confirma possibles canvis amb el club.','Datos de los carteles oficiales del club. Confirma posibles cambios con el club.'):tr('Encara no hi ha propers partits publicats per als teus favorits.','Todavía no hay próximos partidos publicados para tus favoritos.');
   nextMatches.append(note);
  }
 }
