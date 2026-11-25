@@ -3,6 +3,10 @@ on:
   push:
     paths:
       - 'index.html'
+      - '*.js'
+      - '*.html'
+      - 'data/*.json'
+      - 'scripts/comprovar-regressions.py'
       - 'club-brand.js'
       - 'manifest.webmanifest'
       - 'scripts/generate-manifest.mjs'
@@ -36,3 +40,6 @@ jobs:
                   sys.exit(f"ERROR: falta estructura HTML: {marker}")
           print("OK: portada presente y estructura HTML reconocible")
           PY
+
+      - name: Executar comprovacions de regressió existents
+        run: python3 scripts/comprovar-regressions.py
