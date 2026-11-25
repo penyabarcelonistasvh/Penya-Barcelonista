@@ -321,7 +321,9 @@ const fcfLinks={};
 let chosenGroup='all',siteLang=(()=>{try{return localStorage.getItem('pbsv-language')==='es'?'es':'ca'}catch(_){return 'ca'}})();
 const tr=(ca,es)=>siteLang==='ca'?ca:es;
 const groups={masc:['Masculí','Masculino'],fem:['Femení','Femenino'],genuine:['Genuïns','Genuinos']};
-function renderClubTeams(){const grid=document.getElementById('teamGrid');grid.replaceChildren();let visible=clubTeams.filter(t=>chosenGroup==='all'||t[1]===chosenGroup);document.getElementById('teamCount').textContent=visible.length+' '+tr('equips','equipos');visible.forEach(([name,group])=>{const card=document.createElement('article');card.className='team-card';card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',tr('Obrir fitxa de ','Abrir ficha de ')+name);const image=document.createElement('div');image.className='team-image';const imText=document.createElement('span');imText.textContent=tr('FOTOGRAFIA PENDENT','FOTOGRAFÍA PENDIENTE');if(teamAssets[name]){const photo=document.createElement('img');photo.src=teamAssets[name];photo.alt=tr('Fotografia de ','Fotografía de ')+name;photo.loading='lazy';image.append(photo)}else image.append(imText);const body=document.createElement('div');body.className='team-card-body';const title=document.createElement('h3');title.textContent=name;const desc=document.createElement('p');desc.textContent=groups[group][siteLang==='ca'?0:1];const action=document.createElement('span');action.className='team-action';action.textContent=tr('Veure fitxa →','Ver ficha →');body.append(title,desc,action);card.append(image,body);card.addEventListener('click',()=>openClubTeam(name,group));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openClubTeam(name,group)}});grid.append(card);});}
+let teamLoadState="loading";
+function publicDataStatus(grid,ca,es,retry){const p=document.createElement("p");p.className="notice";p.style.gridColumn="1 / -1";p.setAttribute("role","status");p.dataset.ca=ca;p.dataset.es=es;p.textContent=tr(ca,es);grid.append(p);if(retry){const b=document.createElement("button");b.type="button";b.className="photo-open";b.dataset.ca="Tornar-ho a provar";b.dataset.es="Volver a intentar";b.textContent=tr(b.dataset.ca,b.dataset.es);b.onclick=retry;grid.append(b)}}
+function renderClubTeams(){const grid=document.getElementById('teamGrid');grid.replaceChildren();let visible=clubTeams.filter(t=>chosenGroup==='all'||t[1]===chosenGroup);document.getElementById('teamCount').textContent=visible.length+' '+tr('equips','equipos');if(!visible.length){if(teamLoadState==='loading')publicDataStatus(grid,'Carregant els equips…','Cargando los equipos…');else if(teamLoadState==='error')publicDataStatus(grid,'No s’han pogut carregar els equips.','No se han podido cargar los equipos.',loadClubTeams);else publicDataStatus(grid,'No hi ha equips disponibles en aquesta categoria.','No hay equipos disponibles en esta categoría.');return}visible.forEach(([name,group])=>{const card=document.createElement('article');card.className='team-card';card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',tr('Obrir fitxa de ','Abrir ficha de ')+name);const image=document.createElement('div');image.className='team-image';const imText=document.createElement('span');imText.textContent=tr('FOTOGRAFIA PENDENT','FOTOGRAFÍA PENDIENTE');if(teamAssets[name]){const photo=document.createElement('img');photo.src=teamAssets[name];photo.alt=tr('Fotografia de ','Fotografía de ')+name;photo.loading='lazy';image.append(photo)}else image.append(imText);const body=document.createElement('div');body.className='team-card-body';const title=document.createElement('h3');title.textContent=name;const desc=document.createElement('p');desc.textContent=groups[group][siteLang==='ca'?0:1];const action=document.createElement('span');action.className='team-action';action.textContent=tr('Veure fitxa →','Ver ficha →');body.append(title,desc,action);card.append(image,body);card.addEventListener('click',()=>openClubTeam(name,group));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openClubTeam(name,group)}});grid.append(card);});}
 let lastTeamFocus=null;
 function openClubTeam(name,group){
  lastTeamFocus=document.activeElement;
@@ -412,7 +414,8 @@ renderClubTeams();
 })();
 
 /* pbsv-teams-json-integration-v1 */
-(function(){
+function loadClubTeams(){
+ teamLoadState='loading';renderClubTeams();
  fetch('./data/equips.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('No team data');return r.json()}).then(d=>{
   if(!Array.isArray(d.teams))throw Error('Invalid team data');
   const valid=d.teams.filter(t=>t&&typeof t.name==='string'&&['masc','fem','genuine'].includes(t.category));
@@ -425,16 +428,17 @@ renderClubTeams();
    teamRosters[t.name]={players:Array.isArray(t.players)?t.players:Array.isArray(t.members)?t.members.map(name=>({name,number:null})):[],staff:Array.isArray(t.staff)?t.staff:[]};
    if(t.url&&/^https:\/\//.test(t.url))fcfLinks[t.name]=t.url;
   }
-  const selected=document.querySelector('#teamFilters .team-filter.selected');
-  if(selected)selected.click();
- }).catch(e=>console.warn('PBSV teams:',e));
-})();
+  teamLoadState='ready';renderClubTeams();
+ }).catch(e=>{teamLoadState='error';renderClubTeams();console.warn('PBSV teams:',e)});
+}
+loadClubTeams();
 </script>
 <script>if('serviceWorker' in navigator&&isSecureContext){navigator.serviceWorker.register('./pbsv-sw.js',{scope:'./'}).catch(console.warn)}</script>
 <script id="pbsv-sponsors-script">
 (function(){
 function render(items){
  const grid=document.getElementById("pbsvSponsorGrid");if(!grid)return;
+ grid.replaceChildren();if(!items.length){publicDataStatus(grid,"No hi ha patrocinadors publicats.","No hay patrocinadores publicados.");return}
  grid.replaceChildren(...items.map(s=>{
  const card=document.createElement("article");card.className="pbsv-sponsor-card";
  const logo=document.createElement("div");logo.className="pbsv-sponsor-logo";
@@ -445,7 +449,7 @@ function render(items){
  body.append(name,link);card.append(logo,body);return card;
  }));
 }
-fetch("./data/patrocinadors.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("fetch failed");return r.json()}).then(d=>{if(Array.isArray(d.sponsors)){const items=d.sponsors.filter(s=>typeof s.name==="string"&&typeof s.url==="string"&&s.url.startsWith("https://"));render(items)}}).catch(console.warn);
+function load(){const grid=document.getElementById("pbsvSponsorGrid");if(!grid)return;grid.replaceChildren();publicDataStatus(grid,"Carregant els patrocinadors…","Cargando los patrocinadores…");fetch("./data/patrocinadors.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("fetch failed");return r.json()}).then(d=>{if(!Array.isArray(d.sponsors))throw Error("Invalid sponsor data");render(d.sponsors.filter(s=>s&&typeof s.name==="string"&&typeof s.url==="string"&&s.url.startsWith("https://")))}).catch(e=>{grid.replaceChildren();publicDataStatus(grid,"No s’han pogut carregar els patrocinadors.","No se han podido cargar los patrocinadores.",load);console.warn(e)})}load();
 })();
 </script><script id="pbsv-news-script">
 (function(){
