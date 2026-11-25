@@ -16,21 +16,21 @@ input[type=email],input[type=text],input[type=password]{width:100%;padding:12px;
 label.field{display:block;margin:12px 0 5px;font-weight:650}button{background:#174b9d;color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:700;font:inherit}
 button:disabled{opacity:.55;cursor:not-allowed}.help{font-size:13px}.back{display:inline-block;margin-top:12px;color:#174b9d}
 @media(max-width:620px){.permissions{grid-template-columns:1fr}.panel{padding:16px}}
-</style><link rel="stylesheet" href="./admin-shared.css?v=2"></head><body>
+.permission-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.permission-actions button{background:#edf2fa;color:#174b9d;border:1px solid #ccd5e2;padding:9px 12px;font-size:14px}.permission:has(input:checked){background:#edf4ff;border-color:#8daedb}#adminUserList{display:grid;gap:12px}button:focus-visible,input:focus-visible{outline:3px solid #174b9d;outline-offset:3px}</style><link rel="stylesheet" href="./admin-shared.css?v=2"></head><body>
 <header><a href="./admin.html">← PBSV · Panell d'administració</a></header>
 <main><h1>👥 Gestió d'administradors</h1><p>Configura qui podrà gestionar cada apartat de l'aplicació.</p>
-<div class="status" role="status"><strong>Gestió de comptes · accés amb contrasenya pendent.</strong><p>Els comptes es poden desar quan el servidor confirma la connexió. Els comptes nous romandran inactius fins a habilitar l’accés.</p></div>
+<div class="status" role="status"><strong>Gestió segura de comptes</strong><p>Crea un compte, assigna els permisos i activa’l quan estigui preparat. Pots modificar els permisos o desactivar l’accés en qualsevol moment.</p></div>
 <section class="panel"><h2>Administrador principal</h2><div class="owner"><div><strong>Compte propietari de la Penya</strong><p>Accés actual amb GitHub · tots els permisos</p></div><span class="pill">Control total</span></div></section>
 <section class="panel"><h2>Nou administrador</h2><p>Introdueix el nom, l’usuari, la contrasenya inicial i els permisos.</p>
 <label class="field" for="adminName">Nom</label><input id="adminName" type="text" placeholder="Nom de l'administrador" disabled>
 <label class="field" for="adminEmail">Usuari</label><input id="adminEmail" type="text" autocomplete="off" autocapitalize="none" maxlength="40" placeholder="nom.usuari" disabled>
 <label class="field" for="adminPassword">Contrasenya inicial</label><input id="adminPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Mínim 12 caràcters" disabled>
 <label style="display:flex;gap:9px;align-items:center;margin-top:14px"><input type="checkbox" id="mustChangePassword" checked> Obligar a canviar la contrasenya en el primer accés</label>
-<h2 style="margin-top:24px">Permisos inicials</h2>
+<h2 style="margin-top:24px">Permisos inicials</h2><p class="help">Per seguretat, cap permís està seleccionat inicialment.</p><div class="permission-actions"><button type="button" id="selectAllPermissions">Seleccionar tots</button><button type="button" id="clearPermissions">Treure tots</button></div>
 <div class="permissions">
-<label class="permission"><input type="checkbox" data-permission="news" checked> 📰 Notícies</label>
-<label class="permission"><input type="checkbox" data-permission="matches" checked> 📅 Partits i cartells</label>
-<label class="permission"><input type="checkbox" data-permission="notifications" checked> 📣 Enviar notificacions directament</label>
+<label class="permission"><input type="checkbox" data-permission="news"> 📰 Notícies</label>
+<label class="permission"><input type="checkbox" data-permission="matches"> 📅 Partits i cartells</label>
+<label class="permission"><input type="checkbox" data-permission="notifications"> 📣 Enviar notificacions directament</label>
 <label class="permission"><input type="checkbox" data-permission="teams"> ⚽ Equips i plantilles</label>
 <label class="permission"><input type="checkbox" data-permission="sponsors"> 🤝 Patrocinadors</label>
 <label class="permission"><input type="checkbox" data-permission="club"> 🏟️ Informació del club</label>
@@ -41,5 +41,5 @@ button:disabled{opacity:.55;cursor:not-allowed}.help{font-size:13px}.back{displa
 const labels=[...document.querySelectorAll('.permission')];
 const summary=document.getElementById('permissionSummary');
 function refresh(){const selected=labels.filter(label=>label.querySelector('input').checked).map(label=>label.textContent.trim());summary.textContent='Permisos seleccionats ('+selected.length+'): '+(selected.join(', ')||'Cap')+'.';}
-labels.forEach(label=>label.querySelector('input').addEventListener('change',refresh));refresh();
+labels.forEach(label=>label.querySelector('input').addEventListener('change',refresh));for(const [id,value] of [['selectAllPermissions',true],['clearPermissions',false]])document.getElementById(id).addEventListener('click',()=>{for(const input of document.querySelectorAll('input[data-permission]:not(:disabled)'))input.checked=value;refresh()});refresh();
 </script><script src="./admin-usuaris-api.js?v=4" defer></script><script src="./admin-navigation.js?v=3"></script></body></html>
