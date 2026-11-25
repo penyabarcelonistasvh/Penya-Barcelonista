@@ -42,4 +42,4 @@ const labels=[...document.querySelectorAll('.permission')];
 const summary=document.getElementById('permissionSummary');
 function refresh(){const selected=labels.filter(label=>label.querySelector('input').checked).map(label=>label.textContent.trim());summary.textContent='Permisos seleccionats ('+selected.length+'): '+(selected.join(', ')||'Cap')+'.';}
 labels.forEach(label=>label.querySelector('input').addEventListener('change',refresh));refresh();
-</script><script src="./admin-usuaris-api.js?v=4" defer></script><script src="./admin-navigation.js?v=1"></script></body></html>
+</script><script src="./admin-usuaris-api.js?v=4" defer></script><script src="./admin-navigation.js?v=3"></script></body></html>
