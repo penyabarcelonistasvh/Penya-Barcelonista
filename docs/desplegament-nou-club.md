@@ -44,3 +44,21 @@ Executar `python3 scripts/validar-nou-club.py` des del repositori nou. Un result
 ## Dades inicials netes
 
 Executar `python3 scripts/preparar-dades-nou-club.py ../nou-club-dades` amb una destinació nova fora del repositori. Genera vuit JSON buits amb les estructures actuals, sense copiar dades personals ni imatges. No és una plantilla executable completa: encara cal netejar HTML, recursos, textos fixos, configuració i historial Git. No copiar l'historial Git original al client.
+
+## Preparació de la plantilla funcional
+
+Executar `python3 scripts/preparar-plantilla-nou-club.py ../club-demo` per crear l'esquelet local. No és desplegable.
+
+Referències confirmades que cal substituir abans d'incorporar els fitxers:
+
+| Fitxer | Dependència |
+|---|---|
+| publicar-github.js | URL manual d'edició del repositori; mai apuntar al club original |
+| cloudflare/worker.js | propietari, repositori, administrador OAuth, URL pública i marca |
+| cloudflare/push-placeholder.js | origen CORS i hostname Turnstile |
+| pbsv-sw.js | icona local de notificació; substituir el recurs gràfic |
+| club-brand.js | marca, textos, contactes, botiga, xarxes i recursos gràfics |
+
+Generar les configuracions Wrangler amb `python3 scripts/preparar-infra-nou-club.py configuracio.json ../club-demo-infra`. La configuració JSON ha de contenir admin_worker, push_worker, admin_db_name, push_db_name, admin_db_id, push_db_id, turnstile_site_key i vapid_public_key. Només claus públiques, mai secrets. La destinació ha de ser nova. Les subscripcions push comencen desactivades.
+
+Aquesta revisió és parcial: encara cal revisar totes les pàgines HTML, scripts, imatges i automatitzacions. No copiar els fitxers funcionals sense substituir les dependències i validar el resultat.
