@@ -7,15 +7,22 @@ const create=document.getElementById('createAdmin');
 const nameField=document.getElementById('adminName');
 const emailField=document.getElementById('adminEmail');
 const passwordField=document.getElementById('adminPassword');
+let users=[];
+const filters=document.createElement('div');filters.className='user-filters';
+const search=document.createElement('input');search.type='text';search.placeholder='Cerca per nom o usuari';search.setAttribute('aria-label','Cerca administradors');
+const filter=document.createElement('select');filter.setAttribute('aria-label','Estat del compte');for(const [value,label] of [['all','Tots els comptes'],['active','Actius'],['inactive','Inactius']]){const o=document.createElement('option');o.value=value;o.textContent=label;filter.append(o)}
+const total=document.createElement('p');total.className='help';filters.append(search,filter,total);list.before(filters);
+function render(){const q=search.value.trim().toLocaleLowerCase('ca');let visible=0;for(const box of list.children){const match=box.dataset.search.includes(q)&&(filter.value==='all'||box.dataset.state===filter.value);box.hidden=!match;visible+=Number(match)}total.textContent=visible+' de '+users.length+' comptes · '+users.filter(u=>u.active).length+' actius';if(!visible)total.textContent+=' · Cap resultat'}
+search.addEventListener('input',render);filter.addEventListener('change',render);
 let local=false;
 let ready=false;
 let enabled=false;
 const safe=t=>document.createTextNode(String(t));
 function message(t){state.textContent=t;}
 function row(u){
- const box=document.createElement('article');box.className='panel';
+ const box=document.createElement('article');box.className='panel user-card';box.dataset.search=[u.display_name,u.username,u.email].filter(Boolean).join(' ').toLocaleLowerCase('ca');box.dataset.state=u.active?'active':'inactive';
  const heading=document.createElement('h3');heading.append(safe(u.display_name+' · '+(u.username||u.email)));box.append(heading);
- const status=document.createElement('p');status.append(safe(u.active?'Compte actiu':'Compte inactiu · encara no pot entrar'));box.append(status);
+ const status=document.createElement('p');status.className='user-status '+(u.active?'is-active':'is-inactive');status.append(safe(u.active?'Compte actiu':'Compte inactiu · encara no pot entrar'));box.append(status);
  if(u.role==='owner')return box;
  const choices=document.createElement('div');choices.className='permissions';
  const granted=new Set(u.permissions||[]);
@@ -58,8 +65,7 @@ async function load(){
  enabled=data.local_login_enabled===true;
  ready=local;nameField.disabled=!local;emailField.disabled=!local;if(passwordField)passwordField.disabled=!local;create.disabled=!local;
  create.textContent='Desar administrador inactiu';
- list.replaceChildren();data.users.forEach(u=>list.append(row(u)));
- if(!data.users.length){const p=document.createElement('p');p.textContent='Encara no hi ha administradors registrats.';list.append(p)}
+ users=data.users;list.replaceChildren();users.forEach(u=>list.append(row(u)));render();
  message(local?(enabled?'Accés local disponible. Activa els comptes quan estiguin preparats.':'Base de dades connectada. Accés local pendent d’activació.'):'Base de dades connectada. Pendent del desplegament de credencials locals.');
  }catch(e){ready=false;create.disabled=true;nameField.disabled=true;emailField.disabled=true;if(passwordField)passwordField.disabled=true;message('Gestió pendent d’activació: '+e.message)}
 }
@@ -70,6 +76,6 @@ create.addEventListener('click',async()=>{if(!ready)return;
  try{const permissions=fields.filter(x=>x.checked).map(x=>x.dataset.permission);
  const r=await fetch('./api/admin/users',{method:'POST',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({display_name,username,password,permissions,must_change_password:document.getElementById('mustChangePassword')?.checked!==false})});
  const data=await r.json();if(!r.ok)throw Error(data.error||'No s’ha pogut crear el compte.');
- nameField.value='';emailField.value='';passwordField.value='';await load();message('Administrador desat com a inactiu.');
+ nameField.value='';emailField.value='';passwordField.value='';fields.forEach(x=>{x.checked=false;x.dispatchEvent(new Event('change'))});await load();message('Administrador desat com a inactiu.');
  }catch(e){message(e.message)}finally{if(passwordField)passwordField.value='';create.disabled=!ready}});
 load();
