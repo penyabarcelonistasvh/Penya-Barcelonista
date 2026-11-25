@@ -349,17 +349,11 @@ document.getElementById('teamClose').addEventListener('click',closeClubTeam);doc
 document.getElementById('teamFilters').addEventListener('click',e=>{const b=e.target.closest('[data-group]');if(!b)return;chosenGroup=b.dataset.group;document.querySelectorAll('.team-filter').forEach(x=>{const active=x===b;x.classList.toggle('selected',active);x.setAttribute('aria-pressed',String(active))});renderClubTeams()});
 /* Textos estàtics de seccions que abans no seguien el selector d'idioma. */
 const extraTranslations=[
- ['#home .hero .eyebrow','Des de 1978 · Sant Vicenç dels Horts','Desde 1978 · Sant Vicenç dels Horts'],
- ['#home .hero p','Benvinguts a la Penya Barcelonista Sant Vicenç dels Horts. Aquí trobaràs l\'actualitat, els nostres equips i tot el que dona vida al club.','Bienvenidos a la Penya Barcelonista Sant Vicenç dels Horts. Aquí encontrarás las noticias, nuestros equipos y todo lo que da vida al club.'],
  ['#store .page-title .kicker','Vesteix els nostres colors','Viste nuestros colores'],
- ['#store .page-title p','Tot el material i la roba oficial de la Penya, en un mateix lloc.','Todo el material y la ropa oficial de la Penya, en un mismo lugar.'],
  ['#store .store-panel .eyebrow','Botiga oficial','Tienda oficial'],
- ['#store .store-panel h2','Porta la Penya amb tu.','Lleva la Penya contigo.'],
  ['#store .store-panel p','Consulta el catàleg de roba, equipacions i productes oficials del club.','Consulta el catálogo de ropa, equipaciones y productos oficiales del club.'],
  ['#club .page-title .kicker','La nostra identitat','Nuestra identidad'],
- ['#club .page-title p','Descobreix qui som, d\'on venim i les persones que fan possible la Penya Barcelonista Sant Vicenç dels Horts.','Descubre quiénes somos, de dónde venimos y las personas que hacen posible la Penya Barcelonista Sant Vicenç dels Horts.'],
  ['#club [data-detail="history"] h3','Història','Historia'],
- ['#club [data-detail="history"] p','Els nostres orígens, els moments destacats i el camí des de 1978.','Nuestros orígenes, los momentos destacados y el camino desde 1978.'],
  ['#club [data-detail="board"] p','Les persones que representen i gestionen l\'entitat.','Las personas que representan y gestionan la entidad.'],
  ['#club [data-detail="sports"] h3','Àrea esportiva','Área deportiva'],
  ['#club [data-detail="sports"] p','Direcció, coordinació i suport esportiu del club.','Dirección, coordinación y apoyo deportivo del club.'],
@@ -547,4 +541,4 @@ fetch('./data/club.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('club
  window.addEventListener('focus',update);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
  update();
-})();</script><script src="./news-carousel-enhancement.js?v=20261113-mobile3" defer></script><script src="./weekend-matches.js?v=20261113-mobile3" defer></script><script src="./home-quick-links.js?v=20261119-i18n1" defer></script><script src="./directe-cap-setmana-link.js?v=20261113-beta1" defer></script><script src="./results-standings.js?v=20261125-brand1" defer></script><script src="./install-invite.js?v=20261125-brand1" defer></script><script src="./club-history.js?v=2" defer></script><script src="./club-contact.js?v=2" defer></script><script src="./club-live.js?v=3" defer></script><script src="./club-inline-details.js?v=1" defer></script><!-- Cloudflare Web Analytics: comptatge de visites, sense cookies --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"40728284968f40f1aaabf1e43149059d"}'></script><script src="./club-brand.js?v=5"></script></body></html>
+})();</script><script src="./news-carousel-enhancement.js?v=20261113-mobile3" defer></script><script src="./weekend-matches.js?v=20261113-mobile3" defer></script><script src="./home-quick-links.js?v=20261119-i18n1" defer></script><script src="./directe-cap-setmana-link.js?v=20261113-beta1" defer></script><script src="./results-standings.js?v=20261125-brand1" defer></script><script src="./install-invite.js?v=20261125-brand1" defer></script><script src="./club-history.js?v=2" defer></script><script src="./club-contact.js?v=2" defer></script><script src="./club-live.js?v=3" defer></script><script src="./club-inline-details.js?v=1" defer></script><!-- Cloudflare Web Analytics: comptatge de visites, sense cookies --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"40728284968f40f1aaabf1e43149059d"}'></script><script src="./club-brand.js?v=6"></script></body></html>
