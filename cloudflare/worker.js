@@ -148,6 +148,14 @@ export default {async fetch(req,env){
  if(path==='/api/me')return respond(JSON.stringify({authenticated:!!s,login:s?.login||null}),200,{'Content-Type':'application/json'});
 
  // Gestió d'usuaris: només propietari GitHub. Requereix binding D1 ADMIN_DB.
+ if(path==='/api/admin/activity'){
+  if(req.method!=='GET')return respond('Mètode no permès.',405);
+  if(!s||s.kind==='local')return respond('Accés denegat.',403);
+  const identity=await github('/user',s.token);
+  if(!identity.ok)return respond('Sessió caducada.',401);
+  if((await identity.json()).login?.toLowerCase()!==ADMIN_LOGIN.toLowerCase())return respond('Accés denegat.',403);
+  try{const rows=await env.ADMIN_DB.prepare("SELECT actor_email AS actor,action,target,result,created_at FROM admin_audit ORDER BY created_at DESC,id DESC LIMIT 30").all();return respond(JSON.stringify({activity:rows.results||[]}),200,{'Content-Type':'application/json'})}catch{return respond('Historial no disponible.',503)}
+ }
  if(path==='/api/admin/users'||path.startsWith('/api/admin/users/')){
   const json=(data,status=200)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
   if(!['GET','POST','PATCH'].includes(req.method))return json({error:'Mètode no permès.'},405);
@@ -325,6 +333,8 @@ export default {async fetch(req,env){
   const save=await github(api,publishToken,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Actualitzar '+file+' des de l’administració PBSV',content:padded,sha:metadata.sha,branch:'main'})});
   if(!save.ok)return respond(save.status===409?'Conflicte: el fitxer ha canviat. Recarrega abans de publicar.':'GitHub ha rebutjat la publicació ('+save.status+').',save.status===409?409:502);
   const out=await save.json();
+  try{await env.ADMIN_DB.prepare("INSERT INTO admin_audit (id,actor_user_id,actor_email,action,target,result) VALUES (?,?,?,?,?,?)").bind(crypto.randomUUID(),principal?.id||null,principal?.username||ADMIN_LOGIN,'publish',file,'success').run()}catch(e){console.error('PBSV audit publish failed',file)}
+
   return respond(JSON.stringify({ok:true,commit:out.commit?.sha}),200,{'Content-Type':'application/json'});
  }
  if(path==='/'&&!s){
