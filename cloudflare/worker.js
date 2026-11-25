@@ -137,7 +137,7 @@ export default {async fetch(req,env){
     return respond(JSON.stringify({ok:true}),200,{'Content-Type':'application/json','Set-Cookie':cookie('pbsv_session','',0)});
    }catch{return json({error:'Servei no disponible.'},503)}
   }
-  if(path==='/api/me'&&req.method==='GET')return respond(JSON.stringify({authenticated:true,login:principal.username,role:'editor',permissions:[...principal.permissions],mustChange:principal.mustChange}),200,{'Content-Type':'application/json'});
+  if(path==='/api/me'&&req.method==='GET')return respond(JSON.stringify({authenticated:true,login:principal.username,role:'editor',permissions:[...principal.permissions],mustChange:principal.mustChange,brand:{...CLUB_BRAND,site:SITE}}),200,{'Content-Type':'application/json'});
   // Keep local sessions isolated from owner-only handlers.
   if(path==='/'&&req.method==='GET'){
    const modules=[['news','Notícies'],['matches','Partits'],['notifications','Notificacions'],['teams','Equips'],['sponsors','Patrocinadors'],['club','Club']];
@@ -153,7 +153,7 @@ export default {async fetch(req,env){
   }
   if(path.startsWith('/api/push/')&&!localCanNotify(principal))return respond('Accés denegat.',403);
  }
- if(path==='/api/me')return respond(JSON.stringify({authenticated:!!s,login:s?.login||null}),200,{'Content-Type':'application/json'});
+ if(path==='/api/me')return respond(JSON.stringify({authenticated:!!s,login:s?.login||null,brand:{...CLUB_BRAND,site:SITE}}),200,{'Content-Type':'application/json'});
 
  // Gestió d'usuaris: només propietari GitHub. Requereix binding D1 ADMIN_DB.
  if(path==='/api/admin/activity'){
