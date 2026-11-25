@@ -74,8 +74,7 @@ for attr, value in re.findall(r"""\b(src|href)=["']([^"'<>]+)["']""", index, fla
         check((ROOT / local).is_file(), "Recurs local disponible: " + local)
 
 # Les guies han de ser només d'interfície i carregar-se als editors previstos.
-for page, helper in (("admin.html", "admin-easy-start.js"),
-                     ("editor-noticies.html", "admin-news-guide.js"),
+for page, helper in (("editor-noticies.html", "admin-news-guide.js"),
                      ("editor-partits.html", "admin-editor-help.js"),
                      ("editor-equips.html", "admin-editor-help.js"),
                      ("editor-patrocinadors.html", "admin-editor-help.js")):
@@ -84,6 +83,16 @@ for page, helper in (("admin.html", "admin-easy-start.js"),
     helper_js = read(helper)
     check("api/publish" not in helper_js and "localStorage" not in helper_js,
           "La guia no altera la publicació ni els esborranys: " + helper)
+
+# El tauler modern incorpora les accions ràpides directament, sense la guia antiga.
+admin = read("admin.html")
+quick = re.search(r'<div class="quick-actions">([\s\S]*?)</div>', admin)
+check(bool(quick) and all(
+    re.search(r'<a\s+href="\./' + re.escape(page) + r'(?:\?[^"]*)?">[^<]+</a>', quick.group(1))
+    for page in ("editor-noticies.html", "editor-partits.html", "editor-notificacions.html")
+), "Accions ràpides accessibles al tauler: admin.html")
+check("me.permissions" in admin and "me?.role" in admin,
+      "El tauler conserva el filtratge per permisos")
 
 news_js = read("news-carousel-enhancement.js")
 check("data/noticies.json" in news_js and "portada!==false" in news_js,
