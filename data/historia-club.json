@@ -88,5 +88,19 @@
         "Formamos parte de Sant Vicenç dels Horts y de su gente."
       ]
     ]
+  },
+  "copy": {
+    "values": {
+      "ca": "Som una entitat esportiva arrelada a Sant Vicenç dels Horts. El futbol és el nostre punt de trobada i els valors, la nostra manera de créixer.",
+      "es": "Somos una entidad deportiva arraigada en Sant Vicenç dels Horts. El fútbol es nuestro punto de encuentro y los valores, nuestra forma de crecer."
+    },
+    "history": {
+      "ca": "Des de 1978, una passió que uneix generacions. Descobreix els capítols que han fet créixer la Penya.",
+      "es": "Desde 1978, una pasión que une generaciones. Descubre los capítulos que han hecho crecer a la Penya."
+    },
+    "footer": {
+      "ca": "Una penya. Una família. Un sentiment.",
+      "es": "Una peña. Una familia. Un sentimiento."
+    }
   }
 }
