@@ -9,6 +9,7 @@ const emailField=document.getElementById('adminEmail');
 const passwordField=document.getElementById('adminPassword');
 let local=false;
 let ready=false;
+let enabled=false;
 const safe=t=>document.createTextNode(String(t));
 function message(t){state.textContent=t;}
 function row(u){
@@ -30,10 +31,10 @@ function row(u){
  message('Permisos actualitzats.');await load();
  }catch(e){message(e.message)}finally{save.disabled=false}});
  box.append(save);
- const disable=document.createElement('button');disable.type='button';disable.style.marginLeft='10px';disable.textContent='Desactivar';
- disable.disabled=!u.active;
- disable.addEventListener('click',async()=>{if(!confirm('Vols desactivar aquest administrador?'))return;
- try{const r=await fetch('./api/admin/users/'+encodeURIComponent(u.id),{method:'PATCH',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({active:false})});const j=await r.json();if(!r.ok)throw Error(j.error||'Error');await load()}catch(e){message(e.message)}});
+ const disable=document.createElement('button');disable.type='button';disable.style.marginLeft='10px';disable.textContent=u.active?'Desactivar':'Activar';
+ disable.disabled=!u.active&&(!enabled||!u.username);
+ disable.addEventListener('click',async()=>{if(!confirm(u.active?'Vols desactivar aquest administrador?':'Vols activar aquest administrador?'))return;
+ try{const r=await fetch('./api/admin/users/'+encodeURIComponent(u.id),{method:'PATCH',headers:{'Content-Type':'application/json','X-PBSV-Action':'admin-users'},body:JSON.stringify({active:!u.active})});const j=await r.json();if(!r.ok)throw Error(j.error||'Error');await load()}catch(e){message(e.message)}});
  box.append(disable);
  const reset=document.createElement('button');reset.type='button';reset.style.marginLeft='10px';reset.textContent='Restablir contrasenya';
  reset.addEventListener('click',()=>{
@@ -54,11 +55,12 @@ async function load(){
  if(!r.ok)throw Error(data.error||'El servei encara no està disponible.');
  if(!Array.isArray(data.users))throw Error('Resposta inesperada del servidor.');
  local=data.local_credentials===true;
+ enabled=data.local_login_enabled===true;
  ready=local;nameField.disabled=!local;emailField.disabled=!local;if(passwordField)passwordField.disabled=!local;create.disabled=!local;
  create.textContent='Desar administrador inactiu';
  list.replaceChildren();data.users.forEach(u=>list.append(row(u)));
  if(!data.users.length){const p=document.createElement('p');p.textContent='Encara no hi ha administradors registrats.';list.append(p)}
- message(local?'Base de dades connectada. Els comptes nous es desen inactius fins a habilitar l’accés.':'Base de dades connectada. Pendent del desplegament de credencials locals.');
+ message(local?(enabled?'Accés local disponible. Activa els comptes quan estiguin preparats.':'Base de dades connectada. Accés local pendent d’activació.'):'Base de dades connectada. Pendent del desplegament de credencials locals.');
  }catch(e){ready=false;create.disabled=true;nameField.disabled=true;emailField.disabled=true;if(passwordField)passwordField.disabled=true;message('Gestió pendent d’activació: '+e.message)}
 }
 create.addEventListener('click',async()=>{if(!ready)return;
