@@ -17,7 +17,7 @@ async function github(path,token,options={}){return fetch('https://api.github.co
 function config(env){return !!(env.GITHUB_CLIENT_ID&&env.GITHUB_CLIENT_SECRET&&env.SESSION_KEY)}
 async function session(req,env){const value=cookies(req).pbsv_session;if(!value)return null;const s=await unseal(value,env);return s&&s.exp>Date.now()?s:null}
 // Autenticació local preparada, però deshabilitada fins a validar autorització.
-const LOCAL_LOGIN_ENABLED=false;
+const localLoginEnabled=env=>env.LOCAL_LOGIN_ENABLED==='true';
 const FILE_PERMISSION=Object.freeze({'equips.json':'teams','club.json':'club','noticies.json':'news','patrocinadors.json':'sponsors','partits-cap-setmana.json':'matches','proxims-partits.json':'matches'});
 async function localPrincipal(env,s){
  if(s?.kind!=='local'||!env.ADMIN_DB||typeof s.userId!=='string'||!Number.isInteger(s.version))return null;
@@ -57,7 +57,7 @@ async function reserveLoginAttempt(db,bucket,now,max){
 }
 async function localLogin(req,env,origin){
  const json=(data,status)=>respond(JSON.stringify(data),status,{'Content-Type':'application/json'});
- if(!LOCAL_LOGIN_ENABLED)return json({error:'Accés local encara no disponible.'},503);
+ if(!localLoginEnabled(env))return json({error:'Accés local encara no disponible.'},503);
  if(req.method!=='POST')return json({error:'Mètode no permès.'},405);
  if(req.headers.get('Origin')!==origin||req.headers.get('X-PBSV-Action')!=='local-login')return json({error:'Origen no permès.'},403);
  if(!env.ADMIN_DB)return json({error:'Servei no disponible.'},503);
@@ -110,7 +110,7 @@ export default {async fetch(req,env){
  // Fail closed: local sessions must never fall through to owner-only handlers.
  let principal=null;
  if(s?.kind==='local'){
-  if(!LOCAL_LOGIN_ENABLED)return respond('Accés local encara no disponible.',403,{'Set-Cookie':cookie('pbsv_session','',0)});
+  if(!localLoginEnabled(env))return respond('Accés local encara no disponible.',403,{'Set-Cookie':cookie('pbsv_session','',0)});
   try{principal=await localPrincipal(env,s)}catch{return respond('Servei no disponible.',503)}
   if(!principal)return respond('Sessió caducada.',401,{'Set-Cookie':cookie('pbsv_session','',0)});
   if(path==='/api/auth/password'){
@@ -140,8 +140,8 @@ export default {async fetch(req,env){
   if(path==='/'&&req.method==='GET'){
    const modules=[['news','Notícies'],['matches','Partits'],['notifications','Notificacions'],['teams','Equips'],['sponsors','Patrocinadors'],['club','Club']];
    const escapeHtml=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-   const body=principal.mustChange?'<p>Cal canviar la contrasenya abans de continuar.</p>':'<p>Mòduls autoritzats:</p><ul>'+modules.filter(([key])=>principal.permissions.has(key)).map(([key,label])=>'<li><a href="'+({news:'/editor-noticies.html',matches:'/editor-partits.html',notifications:'/editor-notificacions.html',teams:'/editor-equips.html',sponsors:'/editor-patrocinadors.html',club:'/editor-club.html'}[key])+'">'+label+'</a></li>').join('')+'</ul>';
-   return respond('<!doctype html><html lang="ca"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administració PBSV</title><body style="font:16px system-ui;max-width:640px;margin:40px auto;padding:20px"><h1>Administració de la Penya</h1><p>Usuari: '+escapeHtml(principal.displayName)+'</p>'+body+'<a href="/auth/logout">Tancar sessió</a></body></html>',200,{'Content-Type':'text/html;charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'"});
+   const body=principal.mustChange?"<p>Canvia la contrasenya per continuar.</p><form id=\"change\"><label>Contrasenya actual <input name=\"current\" type=\"password\" autocomplete=\"current-password\" required maxlength=\"128\"></label><label>Nova contrasenya <input name=\"next\" type=\"password\" autocomplete=\"new-password\" required minlength=\"12\" maxlength=\"128\"></label><label>Repeteix la nova contrasenya <input name=\"repeat\" type=\"password\" autocomplete=\"new-password\" required minlength=\"12\" maxlength=\"128\"></label><button>Desar contrasenya</button><p id=\"changeStatus\" role=\"status\"></p></form><script>const f=document.getElementById('change');f.addEventListener('submit',async e=>{e.preventDefault();const status=document.getElementById('changeStatus'),b=f.querySelector('button');if(f.elements.next.value!==f.elements.repeat.value){status.textContent='Les contrasenyes no coincideixen.';return}b.disabled=true;try{const r=await fetch('/api/auth/password',{method:'POST',headers:{'Content-Type':'application/json','X-PBSV-Action':'change-password'},body:JSON.stringify({currentPassword:f.elements.current.value,newPassword:f.elements.next.value})});const j=await r.json();if(!r.ok)throw Error(j.error||'Error');location.replace('/')}catch(e){status.textContent=e.message}finally{f.reset();b.disabled=false}});</script>":'<p>Mòduls autoritzats:</p><ul>'+modules.filter(([key])=>principal.permissions.has(key)).map(([key,label])=>'<li><a href="'+({news:'/editor-noticies.html',matches:'/editor-partits.html',notifications:'/editor-notificacions.html',teams:'/editor-equips.html',sponsors:'/editor-patrocinadors.html',club:'/editor-club.html'}[key])+'">'+label+'</a></li>').join('')+'</ul>';
+   return respond('<!doctype html><html lang="ca"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administració PBSV</title><body style="font:16px system-ui;max-width:640px;margin:40px auto;padding:20px"><h1>Administració de la Penya</h1><p>Usuari: '+escapeHtml(principal.displayName)+'</p>'+body+'<a href="/auth/logout">Tancar sessió</a></body></html>',200,{'Content-Type':'text/html;charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"});
   }
   if(path!=='/api/publish'&&!path.startsWith('/api/push/')){
    const pages={'/editor-noticies.html':'news','/editor-partits.html':'matches','/editor-notificacions.html':'notifications','/editor-equips.html':'teams','/editor-patrocinadors.html':'sponsors','/editor-club.html':'club'};
@@ -181,7 +181,7 @@ export default {async fetch(req,env){
     if(userId)return json({error:'Ruta no disponible.'},404);
     const users=await db.prepare('SELECT u.id,u.email,u.display_name,u.role,u.active,u.created_at,c.username,c.must_change_password FROM admin_users u LEFT JOIN admin_credentials c ON c.user_id=u.id ORDER BY u.created_at DESC').all();
     const grants=await db.prepare('SELECT user_id,permission FROM admin_permissions').all();
-    return json({local_credentials:true,users:(users.results||[]).map(u=>({...u,active:!!u.active,permissions:(grants.results||[]).filter(p=>p.user_id===u.id).map(p=>p.permission)}))});
+    return json({local_credentials:true,local_login_enabled:localLoginEnabled(env)&&!!env.ADMIN_PUBLISH_TOKEN,users:(users.results||[]).map(u=>({...u,active:!!u.active,permissions:(grants.results||[]).filter(p=>p.user_id===u.id).map(p=>p.permission)}))});
    }
    const raw=await req.text();if(raw.length>4096)return json({error:'Sol·licitud massa gran.'},413);
    let data;try{data=JSON.parse(raw)}catch{return json({error:'JSON incorrecte.'},400)}
@@ -211,8 +211,8 @@ export default {async fetch(req,env){
    if(user.role==='owner')return json({error:'El propietari no es pot modificar des d’aquesta ruta.'},403);
    const grants=data?.permissions;
    if(grants!==undefined&&(!Array.isArray(grants)||grants.length>permissions.length||new Set(grants).size!==grants.length||grants.some(p=>!permissions.includes(p))))return json({error:'Permisos incorrectes.'},400);
-   if(data?.active===true)return json({error:'L’accés amb contrasenya encara no està disponible.'},409);
-   if(data?.active!==undefined&&data.active!==false)return json({error:'Estat incorrecte.'},400);
+   if(data?.active===true){if(!localLoginEnabled(env)||!env.ADMIN_PUBLISH_TOKEN)return json({error:'Accés local encara no configurat.'},409);if(!await db.prepare('SELECT user_id FROM admin_credentials WHERE user_id=?').bind(userId).first())return json({error:'Compte sense credencials locals.'},409);}
+   if(data?.active!==undefined&&typeof data.active!=='boolean')return json({error:'Estat incorrecte.'},400);
    const reset=data?.password!==undefined;
    if(reset&&(typeof data.password!=='string'||data.password.length<12||data.password.length>128))return json({error:'Contrasenya de 12 a 128 caràcters requerida.'},400);
    if(grants===undefined&&data?.active===undefined&&!reset)return json({error:'Cap canvi indicat.'},400);
@@ -224,11 +224,13 @@ export default {async fetch(req,env){
     queries.push(db.prepare('UPDATE admin_credentials SET password_hash=?,password_salt=?,password_iterations=?,must_change_password=?,updated_at=CURRENT_TIMESTAMP WHERE user_id=?').bind(credential.hash,credential.salt,credential.iterations,data.must_change_password===false?0:1,userId));
     queries.push(db.prepare('UPDATE admin_users SET session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
    }
-   if(data?.active===false)queries.push(db.prepare('UPDATE admin_users SET active=0,session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
+   if(data?.active===true)queries.push(db.prepare('UPDATE admin_users SET active=1,session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
+ if(data?.active===false)queries.push(db.prepare('UPDATE admin_users SET active=0,session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
    if(grants!==undefined){queries.push(db.prepare('DELETE FROM admin_permissions WHERE user_id=?').bind(userId));for(const p of grants)queries.push(db.prepare('INSERT INTO admin_permissions (user_id,permission) VALUES (?,?)').bind(userId,p))}
    await db.batch(queries);
  if(reset)await auditAdmin(env,null,'password_reset',userId);
  if(grants!==undefined)await auditAdmin(env,null,'permissions_update',userId);
+ if(data?.active===true)await auditAdmin(env,null,'user_enable',userId);
  if(data?.active===false)await auditAdmin(env,null,'user_disable',userId);
    return json({ok:true,active:false});
   }catch(e){
@@ -350,7 +352,7 @@ export default {async fetch(req,env){
   return respond(JSON.stringify({ok:true,commit:out.commit?.sha}),200,{'Content-Type':'application/json'});
  }
  if(path==='/'&&!s){
-  const localForm=LOCAL_LOGIN_ENABLED?`<form id="local-login"><label for="username">Usuari</label><input id="username" name="username" autocomplete="username" required minlength="3" maxlength="40"><label for="password">Contrasenya</label><input id="password" name="password" type="password" autocomplete="current-password" required minlength="12" maxlength="128"><button type="submit">Entrar</button><p id="status" role="status" aria-live="polite"></p></form><script>
+  const localForm=localLoginEnabled(env)?`<form id="local-login"><label for="username">Usuari</label><input id="username" name="username" autocomplete="username" required minlength="3" maxlength="40"><label for="password">Contrasenya</label><input id="password" name="password" type="password" autocomplete="current-password" required minlength="12" maxlength="128"><button type="submit">Entrar</button><p id="status" role="status" aria-live="polite"></p></form><script>
   const form=document.getElementById('local-login');
   form.addEventListener('submit',async e=>{e.preventDefault();const button=form.querySelector('button'),status=document.getElementById('status');button.disabled=true;status.textContent='Comprovant les credencials…';try{const response=await fetch('/auth/local-login',{method:'POST',headers:{'Content-Type':'application/json','X-PBSV-Action':'local-login'},body:JSON.stringify({username:form.username.value,password:form.password.value})});const data=await response.json();if(!response.ok||!data.ok)throw Error(data.error||'No s’ha pogut iniciar sessió.');location.replace('/');}catch(error){status.textContent=error.message;}finally{form.password.value='';button.disabled=false;}});
   </script><hr>`:'';
