@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+const root=new URL('../',import.meta.url);
+const file=new URL('manifest.webmanifest',root);
+const context={window:{},document:{documentElement:{style:{setProperty(){}}},querySelector(){return null},querySelectorAll(){return []}}};
+vm.runInNewContext(fs.readFileSync(new URL('club-brand.js',root),'utf8'),context,{timeout:1000});
+const brand=context.window.PBSV_BRAND;
+const current=JSON.parse(fs.readFileSync(file,'utf8'));
+const next={...current,name:brand.name,short_name:brand.installation.shortName,background_color:brand.colors.navy,theme_color:brand.colors.navy,icons:current.icons.map(icon=>({...icon,src:brand.installation.icon}))};
+if(!fs.existsSync(new URL(brand.installation.icon,root)))throw Error('Falta la icona PWA');
+if(process.argv.includes('--write')){fs.writeFileSync(file,JSON.stringify(next,null,2)+'\n');console.log('Manifest actualitzat');}else if(JSON.stringify(current)!==JSON.stringify(next)){throw Error('Manifest desactualitzat: executa node scripts/generate-manifest.mjs --write');}else console.log('Manifest coherent amb la marca');
