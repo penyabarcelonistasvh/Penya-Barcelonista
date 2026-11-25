@@ -2,6 +2,8 @@
 const norm=t=>(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const validImage=s=>/^(?:data:image\/(?:png|jpeg|webp|gif);base64,|https:\/\/|\.\/|assets\/)/i.test(s||'');
 function find(day){
+ const key=day==='saturday'?'sat':'sun';
+ const direct=document.querySelector('#home button.photo-open[data-poster="'+key+'"]')?.closest('article.news-card');if(direct)return direct;
  const label=day==='saturday'?'dissabte':'diumenge';
  const heading=[...document.querySelectorAll('#home h3')].find(h=>norm(h.textContent).trim()==='partits de '+label);
  return heading?.closest('article.news-card')||null;
@@ -12,10 +14,10 @@ function showPoster(src,alt){
  const pic=overlay.querySelector('img');pic.src=src;pic.alt=alt;
 }
 function update(card,item,day){
- if(card)card.setAttribute('aria-busy','false');
+ if(card)card.setAttribute('aria-busy','true');
  if(!card||!item||(!item.title&&!item.image&&!item.comment))return;
  const img=card.querySelector('img.news-photo');
- if(img&&validImage(item.image)){img.style.visibility='hidden';img.removeAttribute('data-current-poster');img.alt='Cartell dels '+(item.title||'partits');img.decoding='async';img.loading='eager';img.fetchPriority='high';const src=item.image;img.onload=()=>{if(img.naturalWidth>0){img.dataset.currentPoster='yes';img.style.visibility='visible';const open=card.querySelector('.photo-open');if(open){open.disabled=false;open.removeAttribute('aria-disabled')}}};img.onerror=()=>{img.style.visibility='hidden';const open=card.querySelector('.photo-open');if(open){open.disabled=true;open.setAttribute('aria-disabled','true')}};img.src=src;if(img.complete&&img.naturalWidth)img.onload();}
+ if(img&&validImage(item.image)){img.style.visibility='hidden';img.removeAttribute('data-current-poster');img.alt='Cartell dels '+(item.title||'partits');img.decoding='async';img.loading='eager';img.fetchPriority='high';const src=item.image;img.onload=()=>{if(img.naturalWidth>0){card.setAttribute('aria-busy','false');img.dataset.currentPoster='yes';img.style.visibility='visible';const open=card.querySelector('.photo-open');if(open){open.disabled=false;open.removeAttribute('aria-disabled')}}};img.onerror=()=>unavailable(card);img.src=src;if(img.complete&&img.naturalWidth)img.onload();}
  const title=card.querySelector('.news-body h3');if(title&&item.title)title.textContent=item.title;
  const paragraph=card.querySelector('.news-body p');if(paragraph&&item.comment)paragraph.textContent=item.comment;
  const meta=card.querySelector('.news-body .meta');
@@ -45,6 +47,6 @@ function loading(card){card.setAttribute('aria-busy','true');const img=card.quer
 function unavailable(card){card.setAttribute('aria-busy','false');const btn=card.querySelector('.photo-open');if(btn){btn.disabled=true;btn.setAttribute('aria-disabled','true')}const meta=card.querySelector('.news-body .meta');if(meta)meta.textContent='INFORMACIÓ PENDENT';const p=card.querySelector('.news-body p');if(p)p.textContent='No es poden consultar els cartells actualitzats ara mateix.';const img=card.querySelector('img.news-photo');if(img)img.style.visibility='hidden'}
 // Capture before the old inline page handlers, so only one viewer ever opens.
 document.addEventListener('click',e=>{const btn=e.target.closest?.('button.photo-open[data-poster]');if(!btn)return;e.preventDefault();e.stopImmediatePropagation();e.stopPropagation();if(btn.disabled)return;const img=btn.closest('article.news-card')?.querySelector('img.news-photo');if(img&&img.dataset.currentPoster==='yes')showPoster(img.currentSrc||img.src,img.alt||'Cartell dels partits')},true);
-async function init(){removeOutdatedAgendaNotice();const all=cards();try{const r=await fetch('./data/club.json',{cache:'no-cache'});if(!r.ok)throw Error('HTTP '+r.status);const club=await r.json();const entry=club.sections?.find(x=>x.id==='pbsv-weekend-matches');if(!entry?.detail)throw Error('Cartells no configurats');const data=JSON.parse(entry.detail);for(const day of ['saturday','sunday']){const card=find(day),item=data[day];if(item&&validImage(item.image))update(card,item,day);else if(card)unavailable(card)}}catch(e){all.forEach(unavailable);console.warn('PBSV partits:',e)}}
+async function init(){removeOutdatedAgendaNotice();const all=cards();all.forEach(loading);try{const r=await fetch('./data/club.json',{cache:'no-cache'});if(!r.ok)throw Error('HTTP '+r.status);const club=await r.json();const entry=club.sections?.find(x=>x.id==='pbsv-weekend-matches');if(!entry?.detail)throw Error('Cartells no configurats');const data=JSON.parse(entry.detail);for(const day of ['saturday','sunday']){const card=find(day),item=data[day];if(item&&validImage(item.image))update(card,item,day);else if(card)unavailable(card)}}catch(e){all.forEach(unavailable);console.warn('PBSV partits:',e)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
