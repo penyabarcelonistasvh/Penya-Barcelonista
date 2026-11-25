@@ -1,3 +1,4 @@
+async function auditAdmin(env,principal,action,target){try{await env.ADMIN_DB.prepare("INSERT INTO admin_audit (id,actor_user_id,actor_email,action,target,result) VALUES (?,?,?,?,?,?)").bind(crypto.randomUUID(),principal?.id||null,principal?.username||ADMIN_LOGIN,action,target,'success').run()}catch{console.error('PBSV audit failed',action)}}
 const OWNER='penyabarcelonistasvh', REPO='Penya-Barcelonista';
 const ADMIN_LOGIN='cristiangarciajura';
 const SITE='https://penyabarcelonistasvh.github.io/Penya-Barcelonista/';
@@ -196,7 +197,8 @@ export default {async fetch(req,env){
      queries.push(db.prepare('INSERT INTO admin_credentials (user_id,username,password_hash,password_salt,password_iterations,must_change_password) VALUES (?,?,?,?,?,?)').bind(id,username,credential.hash,credential.salt,credential.iterations,data.must_change_password===false?0:1));
     }
     await db.batch(queries);
-    return json({ok:true,id,active:false,invitation_sent:false},201);
+ await auditAdmin(env,null,'user_create',id);
+ return json({ok:true,id,active:false,invitation_sent:false},201);
    }
    if(!userId)return json({error:'Falta l’identificador.'},400);
    const user=await db.prepare('SELECT id,role,active FROM admin_users WHERE id=?').bind(userId).first();
@@ -220,6 +222,9 @@ export default {async fetch(req,env){
    if(data?.active===false)queries.push(db.prepare('UPDATE admin_users SET active=0,session_version=session_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(userId));
    if(grants!==undefined){queries.push(db.prepare('DELETE FROM admin_permissions WHERE user_id=?').bind(userId));for(const p of grants)queries.push(db.prepare('INSERT INTO admin_permissions (user_id,permission) VALUES (?,?)').bind(userId,p))}
    await db.batch(queries);
+ if(reset)await auditAdmin(env,null,'password_reset',userId);
+ if(grants!==undefined)await auditAdmin(env,null,'permissions_update',userId);
+ if(data?.active===false)await auditAdmin(env,null,'user_disable',userId);
    return json({ok:true,active:false});
   }catch(e){
    return json({error:'No s’ha pogut completar l’operació. Comprova la configuració de D1.'},503);
@@ -262,7 +267,8 @@ export default {async fetch(req,env){
   if(method==='POST'){try{const raw=await req.text();if(raw.length>4096)return json({error:'Dades massa grans'},413);payload=JSON.parse(raw)}catch{return json({error:'JSON incorrecte'},400)}}
   try{
    const upstream=await env.PUSH_SERVICE.fetch('https://pbsv-push.internal/api/push/admin/schedule'+(path.endsWith('/cancel')?'/cancel':path.endsWith('/health')?'/health':''),{method,headers:{Authorization:'Bearer '+env.PUSH_INTERNAL_TOKEN,...(method==='POST'?{'Content-Type':'application/json'}:{})},...(method==='POST'?{body:JSON.stringify(payload)}:{})});
-   return respond(await upstream.text(),upstream.status,{'Content-Type':'application/json'});
+   if(method==='POST'&&upstream.ok)await auditAdmin(env,principal,path.endsWith('/cancel')?'push_cancel':'push_schedule','notifications');
+ return respond(await upstream.text(),upstream.status,{'Content-Type':'application/json'});
   }catch{return json({error:'No es pot contactar amb el servidor de notificacions.'},502)}
  }
  if(path==='/api/push/send'||path==='/api/push/history'){
@@ -282,7 +288,8 @@ export default {async fetch(req,env){
   if(sending){try{const raw=await req.text();if(raw.length>4096)return json({error:'Dades massa grans.'},413);payload=JSON.parse(raw)}catch{return json({error:'JSON incorrecte.'},400)}}
   try{
    const upstream=await env.PUSH_SERVICE.fetch('https://pbsv-push.internal/api/push/admin/'+(sending?'send':'history'),{method:sending?'POST':'GET',headers:{'Authorization':'Bearer '+env.PUSH_INTERNAL_TOKEN,...(sending?{'Content-Type':'application/json'}:{})},...(sending?{body:JSON.stringify(payload)}:{})});
-   return respond(await upstream.text(),upstream.status,{'Content-Type':'application/json'});
+   if(sending&&upstream.ok)await auditAdmin(env,principal,'push_request','notifications');
+ return respond(await upstream.text(),upstream.status,{'Content-Type':'application/json'});
   }catch{return json({error:'No es pot contactar amb el servidor de notificacions.'},502)}
  }
  if(path==='/api/push/test'){
@@ -333,7 +340,7 @@ export default {async fetch(req,env){
   const save=await github(api,publishToken,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Actualitzar '+file+' des de l’administració PBSV',content:padded,sha:metadata.sha,branch:'main'})});
   if(!save.ok)return respond(save.status===409?'Conflicte: el fitxer ha canviat. Recarrega abans de publicar.':'GitHub ha rebutjat la publicació ('+save.status+').',save.status===409?409:502);
   const out=await save.json();
-  try{await env.ADMIN_DB.prepare("INSERT INTO admin_audit (id,actor_user_id,actor_email,action,target,result) VALUES (?,?,?,?,?,?)").bind(crypto.randomUUID(),principal?.id||null,principal?.username||ADMIN_LOGIN,'publish',file,'success').run()}catch(e){console.error('PBSV audit publish failed',file)}
+  await auditAdmin(env,principal,'publish',file);
 
   return respond(JSON.stringify({ok:true,commit:out.commit?.sha}),200,{'Content-Type':'application/json'});
  }
