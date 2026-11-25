@@ -140,10 +140,15 @@ export default {async fetch(req,env){
   if(path==='/'&&req.method==='GET'){
    const modules=[['news','Notícies'],['matches','Partits'],['notifications','Notificacions'],['teams','Equips'],['sponsors','Patrocinadors'],['club','Club']];
    const escapeHtml=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-   const body=principal.mustChange?'<p>Cal canviar la contrasenya abans de continuar.</p>':'<p>Mòduls autoritzats:</p><ul>'+modules.filter(([key])=>principal.permissions.has(key)).map(([,label])=>'<li>'+label+'</li>').join('')+'</ul><p>Els editors encara estan en preparació.</p>';
+   const body=principal.mustChange?'<p>Cal canviar la contrasenya abans de continuar.</p>':'<p>Mòduls autoritzats:</p><ul>'+modules.filter(([key])=>principal.permissions.has(key)).map(([key,label])=>'<li><a href="'+({news:'/editor-noticies.html',matches:'/editor-partits.html',notifications:'/editor-notificacions.html',teams:'/editor-equips.html',sponsors:'/editor-patrocinadors.html',club:'/editor-club.html'}[key])+'">'+label+'</a></li>').join('')+'</ul>';
    return respond('<!doctype html><html lang="ca"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administració PBSV</title><body style="font:16px system-ui;max-width:640px;margin:40px auto;padding:20px"><h1>Administració de la Penya</h1><p>Usuari: '+escapeHtml(principal.displayName)+'</p>'+body+'<a href="/auth/logout">Tancar sessió</a></body></html>',200,{'Content-Type':'text/html;charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'"});
   }
-  if(path!=='/api/publish'&&!path.startsWith('/api/push/'))return respond('Accés denegat.',403);
+  if(path!=='/api/publish'&&!path.startsWith('/api/push/')){
+   const pages={'/editor-noticies.html':'news','/editor-partits.html':'matches','/editor-notificacions.html':'notifications','/editor-equips.html':'teams','/editor-patrocinadors.html':'sponsors','/editor-club.html':'club'};
+   const assets=new Set(['/admin-shared.css','/admin-navigation.js','/admin-news-guide.js','/publicar-github.js','/admin-preview.js','/admin-publication-status.js','/admin-editor-help.js']);
+   const publicData=/^\/data\/(equips|club|noticies|patrocinadors|partits-cap-setmana|proxims-partits)\.json$/.test(path);
+   if(principal.mustChange||!['GET','HEAD'].includes(req.method)||!(Object.hasOwn(pages,path)&&principal.permissions.has(pages[path])||assets.has(path)||publicData))return respond('Accés denegat.',403);
+  }
   if(path.startsWith('/api/push/')&&!localCanNotify(principal))return respond('Accés denegat.',403);
  }
  if(path==='/api/me')return respond(JSON.stringify({authenticated:!!s,login:s?.login||null}),200,{'Content-Type':'application/json'});
