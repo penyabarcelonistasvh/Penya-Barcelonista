@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "source": "Cartells oficials de partits 21 i 22 de novembre de 2026, publicats a data/club.json (pbsv-weekend-matches)",
-  "note": "Dades transcrites i verificades visualment. No s'han assignat equips amb identificació ambigua.",
+  "source": "Cartells oficials del 28 i 29 de novembre de 2026 i jornades anteriors verificades",
+  "note": "Transcripció visual. Dos partits sense equip identificable al catàleg no s'han assignat.",
   "matches": [
     {
       "date": "2026-11-21",
@@ -186,6 +186,198 @@
       "opponent": "Cervelló C.D.",
       "venue": "Mpal La Barruana",
       "home": true
+    },
+    {
+      "date": "2026-11-28",
+      "time": "09:00",
+      "team": "Benjamín S10 A",
+      "opponent": "P.B. Castellbisbal",
+      "venue": "Mpal Castellbisbal",
+      "home": false
+    },
+    {
+      "date": "2026-11-28",
+      "time": "10:00",
+      "team": "PBSV Genuine Taronja",
+      "opponent": "Sabadell Verd",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-28",
+      "time": "10:00",
+      "team": "Alevín S11 B",
+      "opponent": "Corbera C.F.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-28",
+      "time": "10:30",
+      "team": "Infantil S13",
+      "opponent": "U.D. Viladecans",
+      "venue": "Mpal de Viladecans",
+      "home": false
+    },
+    {
+      "date": "2026-11-28",
+      "time": "11:15",
+      "team": "Benjamín S9 A",
+      "opponent": "Martorell C.F.",
+      "venue": "Mpal La Guàrdia",
+      "home": true
+    },
+    {
+      "date": "2026-11-28",
+      "time": "11:15",
+      "team": "Prebenjamín S7 A",
+      "opponent": "Molins de Rei C.F.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-28",
+      "time": "12:15",
+      "team": "PBSV Genuine Blau",
+      "opponent": "Dream Team Anoia",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-28",
+      "time": "13:30",
+      "team": "Alevín S12 A",
+      "opponent": "Fontsanta Fatjó C.D.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-28",
+      "time": "16:00",
+      "team": "Infantil S14",
+      "opponent": "Martorell C.F.",
+      "venue": "CEM Torrent de Llops",
+      "home": false
+    },
+    {
+      "date": "2026-11-28",
+      "time": "18:30",
+      "team": "Amateur B",
+      "opponent": "AT Incresa",
+      "venue": "ZEM Ricard Ginebreda",
+      "home": false
+    },
+    {
+      "date": "2026-11-28",
+      "time": "19:00",
+      "team": "Amateur Fem B",
+      "opponent": "Cornellà U.E.",
+      "venue": "Col·legi Xaloc",
+      "home": false
+    },
+    {
+      "date": "2026-11-28",
+      "time": "19:30",
+      "team": "Amateur A",
+      "opponent": "U.E. Torrelles",
+      "venue": "CEM Can Roig",
+      "home": false
+    },
+    {
+      "date": "2026-11-29",
+      "time": "09:00",
+      "team": "PBSV Genuine Grana",
+      "opponent": "FEC Granollers",
+      "venue": "Mpal Carrer Girona",
+      "home": false
+    },
+    {
+      "date": "2026-11-29",
+      "time": "09:00",
+      "team": "Veteranas",
+      "opponent": "SJD San Pancracio",
+      "venue": "Mpal del Barri Centre",
+      "home": false
+    },
+    {
+      "date": "2026-11-29",
+      "time": "09:00",
+      "team": "Alevín S12 B",
+      "opponent": "SJD San Pancracio",
+      "venue": "Mpal del Barri Centre",
+      "home": false
+    },
+    {
+      "date": "2026-11-29",
+      "time": "10:00",
+      "team": "Infantil Fem A",
+      "opponent": "Martorell C.F.",
+      "venue": "CEM Torrent de Llops",
+      "home": false
+    },
+    {
+      "date": "2026-11-29",
+      "time": "10:00",
+      "team": "Alevín S12 C",
+      "opponent": "A.E. Abrera",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-29",
+      "time": "10:00",
+      "team": "Alevín S11 A",
+      "opponent": "Santfeliuenc F.C.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-29",
+      "time": "11:15",
+      "team": "Juvenil B",
+      "opponent": "P.B. Cervelló",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-29",
+      "time": "12:00",
+      "team": "Juvenil A",
+      "opponent": "AT Incresa",
+      "venue": "ZEM Ricard Ginebreda",
+      "home": false
+    },
+    {
+      "date": "2026-11-29",
+      "time": "13:00",
+      "team": "Cadete S15",
+      "opponent": "Sant Andreu de la Barca",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-29",
+      "time": "16:00",
+      "team": "Juvenil Fem A",
+      "opponent": "Molins de Rei C.F.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-29",
+      "time": "18:00",
+      "team": "Amateur Fem A",
+      "opponent": "Els Monjos A.D.",
+      "venue": "Mpal La Barruana",
+      "home": true
+    },
+    {
+      "date": "2026-11-29",
+      "time": "19:00",
+      "team": "Juvenil C",
+      "opponent": "Sector Montserratina U.D.",
+      "venue": "Mpal Torre Roja",
+      "home": false
     }
   ]
 }
