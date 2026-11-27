@@ -330,10 +330,10 @@ export default {async fetch(req,env){
   if(req.method!=='POST')return respond('Method not allowed',405);
   if(req.headers.get('Origin')!==origin||req.headers.get('X-PBSV-Action')!=='publish')return respond('Forbidden',403);
   if(!s)return respond('Inicia sessió amb GitHub.',401);
-  if(Number(req.headers.get('Content-Length')||0)>1500000)return respond('Fitxer massa gran.',413);
+  if(Number(req.headers.get('Content-Length')||0)>8000000)return respond('Fitxer massa gran.',413);
   let payload;try{payload=await req.json()}catch{return respond('JSON incorrecte.',400)}
-  const file=payload?.file,content=payload?.content;
-  if(!ALLOWED.has(file)||typeof content!=='string'||content.length>1500000)return respond('Dades no permeses.',400);
+  const file=payload?.file;let content=payload?.content;
+  if(!ALLOWED.has(file)||typeof content!=='string'||content.length>(file==='equips.json'?7500000:1500000))return respond('Dades no permeses.',400);
   try{const parsed=JSON.parse(content);const collections={'equips.json':'teams','club.json':'sections','noticies.json':'noticias','patrocinadors.json':'sponsors'};if(file==='partits-cap-setmana.json' ? !(parsed.saturday&&typeof parsed.saturday==='object'&&parsed.sunday&&typeof parsed.sunday==='object') : file==='proxims-partits.json' ? !(Array.isArray(parsed.matches)&&parsed.matches.every(m=>m&&typeof m.team==='string'&&typeof m.date==='string'&&typeof m.time==='string'&&typeof m.opponent==='string'&&typeof m.venue==='string'&&typeof m.home==='boolean')) : !Array.isArray(parsed[collections[file]]))return respond('Format de dades incorrecte.',400)}catch{return respond('JSON incorrecte.',400)}
   let publishToken=s.token;
   if(principal){
@@ -347,6 +347,29 @@ export default {async fetch(req,env){
   const api='/repos/'+OWNER+'/'+REPO+'/contents/data/'+file;
   const current=await github(api,publishToken);if(!current.ok)return respond('No es pot llegir el fitxer a GitHub.',502);
   const metadata=await current.json();
+  if(file==='equips.json'){
+   const data=JSON.parse(content), pending=[];
+   for(const team of data.teams){
+    if(typeof team?.image!=='string'||!team.image.startsWith('data:'))continue;
+    const match=/^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(team.image);
+    if(!match||match[1].length>750000)return respond('Format o mida de fotografia incorrectes.',400);
+    let raw;try{raw=Uint8Array.from(atob(match[1]),c=>c.charCodeAt(0))}catch{return respond('Fotografia incorrecta.',400)}
+    if(raw.length<4||raw[0]!==255||raw[1]!==216||raw[2]!==255)return respond('Fotografia JPEG incorrecta.',400);
+    const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw)),b=>b.toString(16).padStart(2,'0')).join('');
+    const imagePath='assets/equips/'+hash+'.jpg';
+    pending.push({imagePath,encoded:match[1]});team.image=imagePath;
+   }
+   content=JSON.stringify(data,null,2)+'\n';
+   if(encoder.encode(content).length>1100000)return respond('Fitxer massa gran.',413);
+   for(const {imagePath,encoded} of pending){
+    const imageApi='/repos/'+OWNER+'/'+REPO+'/contents/'+imagePath;
+    const existing=await github(imageApi,publishToken);
+    if(existing.ok)continue;
+    if(existing.status!==404)return respond('No es pot comprovar la fotografia a GitHub.',502);
+    const uploaded=await github(imageApi,publishToken,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Desar fotografia d’equip PBSV',content:encoded,branch:'main'})});
+    if(!uploaded.ok)return respond('No es pot desar la fotografia a GitHub ('+uploaded.status+').',502);
+   }
+  }
   const bytes=encoder.encode(content);if(bytes.length>1100000)return respond('Fitxer massa gran.',413);
   const encoded=b64(bytes).replace(/-/g,'+').replace(/_/g,'/');const padded=encoded+'='.repeat((4-encoded.length%4)%4);
   const save=await github(api,publishToken,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Actualitzar '+file+' des de l’administració PBSV',content:padded,sha:metadata.sha,branch:'main'})});
